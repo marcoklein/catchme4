@@ -3,7 +3,7 @@ import { Client } from "colyseus.js";
 import { GameObjects } from "phaser";
 import { GameState } from "../generated/GameState";
 import { createLogger } from "../logger";
-import Body from "../objects/Body";
+import BodySprite from "../objects/Body";
 import GameScene from "../scenes/GameScene";
 const log = createLogger("client");
 
@@ -38,26 +38,18 @@ export async function connectNetworkClient(scene: GameScene) {
     log("added new body with id", body.id);
 
     // adding new player to scene
-    const tank = new Body(scene, 200, 200);
-    bodiesMap.set(body, tank);
+    const bodySprite = new BodySprite(scene, 200, 200);
+    bodiesMap.set(body, bodySprite);
 
-    body.position.onChange = (changes) => {
-      changes.forEach((change) => {
-        const changeHandler = {
-          x: (value: number) => {
-            tank.setX(value);
-          },
-          y: (value: number) => {
-            tank.setY(value);
-          },
-        };
-        const handler = changeHandler[change.field];
-        if (!handler) {
-          console.warn("no change handler for attribute", change.field);
-          return;
-        }
-        handler(change.value);
-      });
+    body.position.listen("x", (x) => bodySprite.setX(x));
+    body.position.listen("y", (y) => bodySprite.setY(y));
+    body.moveDirection.onChange = () => {
+      if (body.moveDirection.x !== 0 || body.moveDirection.y !== 0) {
+        log("setting rotation %j", body.moveDirection);
+        bodySprite.setRotation(
+          new Phaser.Math.Vector2(body.moveDirection).angle()
+        );
+      }
     };
 
     body.onRemove = () => {

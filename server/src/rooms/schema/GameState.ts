@@ -1,4 +1,4 @@
-import { Schema, Context, type, MapSchema } from "@colyseus/schema";
+import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
 
 export class Player extends Schema {
   @type("string") id: string;
@@ -17,11 +17,18 @@ export class Position extends Schema {
   @type("number") y: number = 0;
 }
 
-export class Body extends Schema {
+export class Tile extends Schema {}
+
+export class TileMap extends Schema {
+  @type([Tile]) tiles = new ArraySchema<Tile>();
+}
+
+export class BodySchema extends Schema {
   @type("string") id: string;
   @type(Position) position: Position = new Position();
   @type("number") speed: number = 0.1;
   @type(Position) moveDirection: Position = new Position();
+  @type("number") radius: number = 1;
 
   constructor(id: string) {
     super();
@@ -31,7 +38,7 @@ export class Body extends Schema {
 
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
-  @type({ map: Body }) bodies = new MapSchema<Body>();
+  @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
 
   findPlayerAndBody(sessionId: string) {
     const player = this.players.get(sessionId);

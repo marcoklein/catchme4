@@ -3,10 +3,10 @@ import assert from "assert";
 import { ColyseusTestServer, boot } from "@colyseus/testing";
 
 // import your "arena.config.ts" file here.
-import appConfig from "../src/arena.config";
-import { GameState } from "../src/rooms/schema/GameState";
+import appConfig from "../arena.config";
+import { GameState } from "./schema/GameState";
 
-describe("testing your Colyseus app", () => {
+xdescribe("testing your Colyseus app", () => {
   let colyseus: ColyseusTestServer;
 
   before(async () => (colyseus = await boot(appConfig)));

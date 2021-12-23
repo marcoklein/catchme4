@@ -1,16 +1,15 @@
-import PhaserLogo from "../objects/phaserLogo";
-import FpsText from "../objects/fpsText";
-import { createClient } from "../network/client";
+import FpsText from "../objects/FpsText";
+import { connectNetworkClient } from "../network/client";
+import { initInput } from "../input/input";
 
-export default class MainScene extends Phaser.Scene {
+export default class GameScene extends Phaser.Scene {
   fpsText;
 
   constructor() {
-    super({ key: "MainScene" });
+    super({ key: "GameScene" });
   }
 
-  create() {
-    new PhaserLogo(this, this.cameras.main.width / 2, 0);
+  async create() {
     this.fpsText = new FpsText(this);
 
     // display the Phaser.VERSION
@@ -20,8 +19,8 @@ export default class MainScene extends Phaser.Scene {
         fontSize: "24px",
       })
       .setOrigin(1, 0);
-
-    createClient();
+    const room = await connectNetworkClient(this);
+    initInput(this, room);
   }
 
   update() {

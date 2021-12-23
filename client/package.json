@@ -8,7 +8,7 @@
     "name": "Marco Klein"
   },
   "scripts": {
-    "start": "webpack serve --config webpack/webpack.dev.js",
+    "start": "webpack serve --config webpack/webpack.dev.js --env DEBUG=*",
     "build": "rimraf dist && webpack --config webpack/webpack.prod.js",
     "bundle": "npm run build",
     "serve": "serve dist",
@@ -26,9 +26,12 @@
   "license": "MIT",
   "dependencies": {
     "colyseus.js": "^0.14.13",
+    "debug": "^4.3.3",
+    "dotenv": "^10.0.0",
     "phaser": "^3.55.2"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.7",
     "copy-webpack-plugin": "^10.1.0",
     "html-webpack-plugin": "^5.5.0",
     "javascript-obfuscator": "^3.0.0",

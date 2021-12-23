@@ -1,7 +1,6 @@
 import { Room } from "colyseus.js";
 import { GameState } from "../generated/GameState";
 import GameScene from "../scenes/GameScene";
-import debug from "debug";
 import { createLogger } from "../logger";
 const log = createLogger("input");
 

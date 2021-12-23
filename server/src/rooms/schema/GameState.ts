@@ -12,10 +12,16 @@ export class Player extends Schema {
   }
 }
 
-export class Body extends Schema {
-  @type("string") id: string;
+export class Position extends Schema {
   @type("number") x: number = 0;
   @type("number") y: number = 0;
+}
+
+export class Body extends Schema {
+  @type("string") id: string;
+  @type(Position) position: Position = new Position();
+  @type("number") speed: number = 0.1;
+  @type(Position) moveDirection: Position = new Position();
 
   constructor(id: string) {
     super();

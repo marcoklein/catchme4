@@ -12,12 +12,10 @@ export async function connectNetworkClient(scene: GameScene) {
 
   const room = await client.joinOrCreate<GameState>("gameRoom");
   log(room.sessionId, "joined", room.id, room.name);
-  room.onStateChange((state) => {
-    log(room.name, "has new state", state);
-  });
-  room.onMessage("message", (message) => {
-    log(room.id, "received", message);
-  });
+
+  room.onStateChange((state) => {});
+  room.onMessage("message", (message) => {});
+
   room.state.players.onAdd = (player) => {
     log("added new player with id", player.id);
 
@@ -43,7 +41,7 @@ export async function connectNetworkClient(scene: GameScene) {
     const tank = new Body(scene, 200, 200);
     bodiesMap.set(body, tank);
 
-    body.onChange = (changes) => {
+    body.position.onChange = (changes) => {
       changes.forEach((change) => {
         const changeHandler = {
           x: (value: number) => {
@@ -61,6 +59,7 @@ export async function connectNetworkClient(scene: GameScene) {
         handler(change.value);
       });
     };
+
     body.onRemove = () => {
       log("player", body.id, "removed");
       const tank = bodiesMap.get(body);

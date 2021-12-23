@@ -1,9 +1,14 @@
 import { Room, Client } from "colyseus";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
+import { Vector } from "../math/Vector";
 import { DirectionMessage } from "./messages/DirectionMessage";
 import { Body, GameState, Player } from "./schema/GameState";
 const log = createLogger("gameroom");
+
+export class ServerBody {
+  directions = { up: false, down: false, left: false, right: false };
+}
 
 export class MyRoom extends Room<GameState> {
   lastBodyId = 1;
@@ -12,6 +17,26 @@ export class MyRoom extends Room<GameState> {
 
     this.onMessage<DirectionMessage>("direction", (client, message) => {
       log("direction message", message, "from", client.sessionId);
+      const { body } = this.state.findPlayerAndBody(client.sessionId);
+      if (body) {
+        let moveX = 0;
+        let moveY = 0;
+        if (message.down) moveY++;
+        if (message.up) moveY--;
+        if (message.left) moveX--;
+        if (message.right) moveX++;
+        if (moveX !== 0 || moveY !== 0) {
+          log("move direction %j", { moveX, moveY });
+          const { x, y } = Vector.of(moveX, moveY).normalize();
+          log("after direction %j", { x, y });
+          body.moveDirection.x = x;
+          body.moveDirection.y = y;
+          log("move direction %j", body.moveDirection);
+        } else {
+          body.moveDirection.x = 0;
+          body.moveDirection.y = 0;
+        }
+      }
     });
     this.setSimulationInterval(
       (millis) => this.update(millis),
@@ -23,9 +48,9 @@ export class MyRoom extends Room<GameState> {
     this.state.players.forEach((player) => {
       const body = this.state.bodies.get(player.bodyId);
       if (body) {
-        log("changing body pos");
-        const speed = 1;
-        body.x += millis * speed;
+        const speed = body.speed;
+        body.position.x += body.moveDirection.x * millis * speed;
+        body.position.y += body.moveDirection.y * millis * speed;
       }
     });
   }

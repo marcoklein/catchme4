@@ -16,11 +16,21 @@ export class Position extends Schema {
   @type("number") x: number = 0;
   @type("number") y: number = 0;
 }
+export class Dimension extends Schema {
+  @type("number") width: number = 0;
+  @type("number") height: number = 0;
+}
 
-export class Tile extends Schema {}
+export class Tile extends Schema {
+  @type("string") type = "";
+  @type(Position) position = new Position();
+  @type("boolean") walkable = true;
+}
 
 export class TileMap extends Schema {
-  @type([Tile]) tiles = new ArraySchema<Tile>();
+  @type({ map: Tile }) tiles = new MapSchema<Tile>();
+  @type(Dimension) mapSize = new Dimension();
+  @type("number") tileSize = 64;
 }
 
 export class BodySchema extends Schema {
@@ -39,6 +49,7 @@ export class BodySchema extends Schema {
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
+  @type(TileMap) tileMap = new TileMap();
 
   findPlayerAndBody(sessionId: string) {
     const player = this.players.get(sessionId);

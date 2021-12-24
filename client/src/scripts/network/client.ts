@@ -61,6 +61,13 @@ export async function connectNetworkClient(scene: GameScene) {
 
     body.triggerAll();
   };
+  room.state.listen("tileMap", (tileMap) =>
+    tileMap.listen("tiles", (tiles) => {
+      tiles.onAdd = (tile, key) => {
+        log("new tile %s", key);
+      };
+    })
+  );
 
   return room;
 }

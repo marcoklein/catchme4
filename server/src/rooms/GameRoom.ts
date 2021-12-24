@@ -2,9 +2,14 @@ import { Room, Client } from "colyseus";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
 import { DirectionMessage } from "./messages/DirectionMessage";
-import { BodySchema, GameState, Player } from "./schema/GameState";
-import { runGameSimulation } from "./Simulation";
-import { World, Bodies, Runner, Engine, Body, Vector } from "matter-js";
+import {
+  BodySchema,
+  GameState,
+  Player,
+  Tile,
+  TileMap,
+} from "./schema/GameState";
+import { World, Bodies, Runner, Engine, Body, Vector, Bounds } from "matter-js";
 const log = createLogger("gameroom");
 
 export class ServerBody {
@@ -18,6 +23,7 @@ export class MyRoom extends Room<GameState> {
 
   onCreate(options: any) {
     this.setState(new GameState());
+    this.createTileMap();
     this.matterMap = new Map<BodySchema, Body>();
 
     this.onMessage<DirectionMessage>("direction", (client, message) => {
@@ -49,8 +55,65 @@ export class MyRoom extends Room<GameState> {
     );
     this.createPhysics();
   }
+
   private createPhysics() {
-    this.engine = Engine.create({ gravity: { x: 0, y: 0 } });
+    this.engine = Engine.create({
+      gravity: { x: 0, y: 0 },
+    });
+    this.createWorldBoundaries(200, 300);
+  }
+
+  private createWorldBoundaries(
+    width: number,
+    height: number,
+    thickness = 100
+  ) {
+    const x = 0,
+      y = 0;
+    World.add(this.engine.world, [
+      Bodies.rectangle(
+        x - thickness + (width + 2 * thickness) / 2,
+        y - thickness / 2,
+        width + 2 * thickness,
+        thickness,
+        {
+          isStatic: true,
+        }
+      ),
+      Bodies.rectangle(
+        x + width + thickness / 2,
+        y + height / 2,
+        thickness,
+        height,
+        { isStatic: true }
+      ),
+      Bodies.rectangle(
+        x - thickness + (width + 2 * thickness) / 2,
+        y + height + thickness / 2,
+        width + 2 * thickness,
+        thickness,
+        { isStatic: true }
+      ),
+      Bodies.rectangle(x - thickness / 2, y + height / 2, thickness, height, {
+        isStatic: true,
+      }),
+    ]);
+  }
+
+  private createTileMap() {
+    const tileMap = new TileMap();
+    tileMap.mapSize.width = 15;
+    tileMap.mapSize.height = 10;
+    tileMap.tileSize = 64;
+    for (let i = 0; i < tileMap.mapSize.width * tileMap.mapSize.height; i++) {
+      const tile = new Tile();
+      const x = i % tileMap.mapSize.width;
+      const y = Math.floor(i / tileMap.mapSize.height);
+      tile.position.x = x;
+      tile.position.y = y;
+      tileMap.tiles.set(`${tile.position.x};${tile.position.y}`, tile);
+    }
+    this.state.tileMap = tileMap;
   }
 
   update(millis: number) {
@@ -79,6 +142,8 @@ export class MyRoom extends Room<GameState> {
     const player = new Player(client.sessionId, "<player name>");
     const body = new BodySchema(`${this.lastBodyId++}`);
     body.radius = 16;
+    body.position.x = 50;
+    body.position.y = 50;
     player.bodyId = body.id;
     this.state.players.set(player.id, player);
     this.state.bodies.set(body.id, body);

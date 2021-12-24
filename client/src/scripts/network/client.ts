@@ -10,7 +10,12 @@ import GameScene from "../scenes/GameScene";
 const log = createLogger("client");
 
 export async function connectNetworkClient(scene: GameScene) {
-  const client = new Client("ws://localhost:2567");
+  let serverUrl = "ws://zshwx1.colyseus.de";
+  // if (/localhost/.test(window.location.host)) {
+  //   serverUrl = "ws://localhost:2567";
+  // }
+  log("connecting to server url %s", serverUrl);
+  const client = new Client(serverUrl);
 
   const room = await client.joinOrCreate<GameState>("gameRoom");
   log(room.sessionId, "joined", room.id, room.name);

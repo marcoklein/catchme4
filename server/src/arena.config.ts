@@ -7,7 +7,7 @@ import { monitor } from "@colyseus/monitor";
 import { MyRoom } from "./rooms/GameRoom";
 
 export default Arena({
-  getId: () => "Your Colyseus App",
+  getId: () => "CatchMe 4",
 
   initializeGameServer: (gameServer) => {
     /**

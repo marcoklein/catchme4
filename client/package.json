@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "@catchme4/client",
   "private": true,
   "version": "3.55.2",
   "homepage": "https://github.com/yandeu/phaser-project-template#readme",

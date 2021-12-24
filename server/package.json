@@ -1,9 +1,9 @@
 {
   "private": true,
-  "name": "my-app",
-  "version": "1.0.0",
+  "name": "@catchme4/server",
+  "version": "0.1.0",
   "description": "npm init template for bootstrapping an empty Colyseus project",
-  "main": "lib/index.js",
+  "main": "index.js",
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",

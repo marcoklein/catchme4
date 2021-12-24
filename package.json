@@ -1,5 +1,5 @@
 {
-  "name": "tanktank",
+  "name": "catchme4",
   "version": "0.1.0",
   "description": "Multiplayer game with Phaser and Colyseus.",
   "main": "index.js",

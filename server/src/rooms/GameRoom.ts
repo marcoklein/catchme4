@@ -54,13 +54,18 @@ export class MyRoom extends Room<GameState> {
       environment.SIMULATION_INTERVAL
     );
     this.createPhysics();
+
+    const tileMap = this.state.tileMap;
+    this.createWorldBoundaries(
+      tileMap.mapSize.width * tileMap.tileSize,
+      tileMap.mapSize.height * tileMap.tileSize
+    );
   }
 
   private createPhysics() {
     this.engine = Engine.create({
       gravity: { x: 0, y: 0 },
     });
-    this.createWorldBoundaries(200, 300);
   }
 
   private createWorldBoundaries(
@@ -68,8 +73,8 @@ export class MyRoom extends Room<GameState> {
     height: number,
     thickness = 100
   ) {
-    const x = 0,
-      y = 0;
+    const x = -width / 2,
+      y = -height / 2;
     World.add(this.engine.world, [
       Bodies.rectangle(
         x - thickness + (width + 2 * thickness) / 2,

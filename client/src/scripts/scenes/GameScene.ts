@@ -10,6 +10,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   async create() {
+    this.cameras.main.centerOn(0, 0);
     this.fpsText = new FpsText(this);
 
     // display the Phaser.VERSION

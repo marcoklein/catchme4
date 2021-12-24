@@ -2,6 +2,7 @@ import { Schema } from "@colyseus/schema";
 import { Client } from "colyseus.js";
 import { GameObjects } from "phaser";
 import { GameState } from "../generated/GameState";
+import { DEPTH } from "../globals";
 import { createLogger } from "../logger";
 import BodySprite from "../objects/Body";
 import GameScene from "../scenes/GameScene";
@@ -15,6 +16,21 @@ export async function connectNetworkClient(scene: GameScene) {
 
   room.onStateChange((state) => {});
   room.onMessage("message", (message) => {});
+
+  let worldBoundary: Phaser.GameObjects.Shape | undefined = undefined;
+  room.state.listen("tileMap", (tileMap) => {
+    tileMap.mapSize.onChange = () => {
+      if (worldBoundary) worldBoundary.destroy();
+      worldBoundary = scene.add.rectangle(
+        0,
+        0,
+        room.state.tileMap.mapSize.width * tileMap.tileSize,
+        room.state.tileMap.mapSize.height * tileMap.tileSize,
+        0xcccccc
+      );
+      worldBoundary.setDepth(DEPTH.ground);
+    };
+  });
 
   room.state.players.onAdd = (player) => {
     log("added new player with id", player.id);

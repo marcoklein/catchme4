@@ -7,7 +7,7 @@ const DEFAULT_HEIGHT = 720;
 
 const config = {
   type: Phaser.AUTO,
-  backgroundColor: "#ffffff",
+  backgroundColor: "#333333",
   scale: {
     parent: "phaser-game",
     mode: Phaser.Scale.FIT,
@@ -16,13 +16,6 @@ const config = {
     height: DEFAULT_HEIGHT,
   },
   scene: [PreloadScene, GameScene],
-  physics: {
-    default: "arcade",
-    arcade: {
-      debug: false,
-      gravity: { y: 400 },
-    },
-  },
 };
 
 window.addEventListener("load", () => {

@@ -10,7 +10,7 @@ import GameScene from "../scenes/GameScene";
 const log = createLogger("client");
 
 export async function connectNetworkClient(scene: GameScene) {
-  let serverUrl = "ws://zshwx1.colyseus.de";
+  let serverUrl = "wss://zshwx1.colyseus.de";
   // if (/localhost/.test(window.location.host)) {
   //   serverUrl = "ws://localhost:2567";
   // }

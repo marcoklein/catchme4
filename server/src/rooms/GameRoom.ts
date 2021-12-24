@@ -1,4 +1,5 @@
-import { Room, Client } from "colyseus";
+import { Client, Room } from "colyseus";
+import { Bodies, Body, Engine, Events, Vector, World } from "matter-js";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
 import { DirectionMessage } from "./messages/DirectionMessage";
@@ -9,16 +10,6 @@ import {
   Tile,
   TileMap,
 } from "./schema/GameState";
-import {
-  World,
-  Events,
-  Bodies,
-  Runner,
-  Engine,
-  Body,
-  Vector,
-  Bounds,
-} from "matter-js";
 const log = createLogger("gameroom");
 
 export class ServerBody {
@@ -33,7 +24,6 @@ export class MyRoom extends Room<GameState> {
 
   onCreate(options: any) {
     this.setState(new GameState());
-    this.createTileMap();
     this.schemaToMatterBodyMap = new Map();
     this.matterBodyToSchemaBodyMap = new Map();
 
@@ -65,6 +55,7 @@ export class MyRoom extends Room<GameState> {
       environment.SIMULATION_INTERVAL
     );
     this.createPhysics();
+    this.createTileMap();
 
     const tileMap = this.state.tileMap;
     this.createWorldBoundaries(
@@ -141,14 +132,36 @@ export class MyRoom extends Room<GameState> {
     tileMap.mapSize.height = 10;
     tileMap.tileSize = 64;
     for (let i = 0; i < tileMap.mapSize.width * tileMap.mapSize.height; i++) {
-      const tile = new Tile();
-      const x = i % tileMap.mapSize.width;
-      const y = Math.floor(i / tileMap.mapSize.height);
-      tile.position.x = x;
-      tile.position.y = y;
-      tileMap.tiles.set(`${tile.position.x};${tile.position.y}`, tile);
+      if (i % 13 === 0 || Math.random() < 0.05) {
+        const tile = new Tile();
+        const x = i % tileMap.mapSize.width;
+        const y = Math.floor(i / tileMap.mapSize.width);
+        tile.position.x = x;
+        tile.position.y = y;
+        tile.type = "tile.wall.1";
+        tileMap.tiles.set(`${tile.position.x};${tile.position.y}`, tile);
+      }
     }
     this.state.tileMap = tileMap;
+
+    const tileWorldX =
+      -tileMap.mapSize.width * tileMap.tileSize * 0.5 + tileMap.tileSize / 2;
+    const tileWorldY =
+      -tileMap.mapSize.height * tileMap.tileSize * 0.5 + tileMap.tileSize / 2;
+    this.state.tileMap.tiles.forEach((tile) => {
+      World.add(
+        this.engine.world,
+        Bodies.rectangle(
+          tileWorldX + tile.position.x * tileMap.tileSize,
+          tileWorldY + tile.position.y * tileMap.tileSize,
+          tileMap.tileSize,
+          tileMap.tileSize,
+          {
+            isStatic: true,
+          }
+        )
+      );
+    });
   }
 
   update(millis: number) {

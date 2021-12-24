@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.2.0
+
+- generate tile map
+- bodies collide with tiles
+
 ## 0.1.0
 
 - players can catch each other

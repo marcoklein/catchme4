@@ -1,6 +1,5 @@
 {
   "name": "catchme4",
-  "version": "0.1.0",
   "private": true,
   "description": "Multiplayer game with Phaser and Colyseus.",
   "author": "Marco Klein",
@@ -10,6 +9,7 @@
     "server"
   ],
   "scripts": {
+    "start": "lerna run start --parallel",
     "deploy": "lerna run deploy --scope @catchme4/client"
   },
   "devDependencies": {

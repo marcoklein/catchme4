@@ -9,7 +9,16 @@ import {
   Tile,
   TileMap,
 } from "./schema/GameState";
-import { World, Bodies, Runner, Engine, Body, Vector, Bounds } from "matter-js";
+import {
+  World,
+  Events,
+  Bodies,
+  Runner,
+  Engine,
+  Body,
+  Vector,
+  Bounds,
+} from "matter-js";
 const log = createLogger("gameroom");
 
 export class ServerBody {
@@ -19,12 +28,14 @@ export class ServerBody {
 export class MyRoom extends Room<GameState> {
   lastBodyId = 1;
   engine!: Engine;
-  matterMap = new Map<BodySchema, Body>();
+  schemaToMatterBodyMap = new Map<BodySchema, Body>();
+  matterBodyToSchemaBodyMap = new Map<Body, BodySchema>();
 
   onCreate(options: any) {
     this.setState(new GameState());
     this.createTileMap();
-    this.matterMap = new Map<BodySchema, Body>();
+    this.schemaToMatterBodyMap = new Map();
+    this.matterBodyToSchemaBodyMap = new Map();
 
     this.onMessage<DirectionMessage>("direction", (client, message) => {
       log("direction message", message, "from", client.sessionId);
@@ -65,6 +76,25 @@ export class MyRoom extends Room<GameState> {
   private createPhysics() {
     this.engine = Engine.create({
       gravity: { x: 0, y: 0 },
+    });
+    // TODO put this into game rules
+    Events.on(this.engine, "collisionStart", (e) => {
+      e.pairs.forEach((pair) => {
+        const bodyA = this.matterBodyToSchemaBodyMap.get(pair.bodyA);
+        const bodyB = this.matterBodyToSchemaBodyMap.get(pair.bodyB);
+
+        if (bodyA && bodyB) {
+          const catchBody = (bodyA: BodySchema, bodyB: BodySchema) => {
+            if (bodyA.isCatcher && !bodyB.isCatcher) {
+              bodyA.isCatcher = false;
+              bodyB.isCatcher = true;
+              return true;
+            }
+            return false;
+          };
+          if (!catchBody(bodyA, bodyB)) catchBody(bodyB, bodyA);
+        }
+      });
     });
   }
 
@@ -124,7 +154,7 @@ export class MyRoom extends Room<GameState> {
   update(millis: number) {
     // update body forces / directions
     this.state.bodies.forEach((body) => {
-      const matterBody = this.matterMap.get(body);
+      const matterBody = this.schemaToMatterBodyMap.get(body);
       if (!matterBody) return;
       const speed = body.speed;
       const force = Vector.mult(body.moveDirection, speed * millis * 0.002);
@@ -136,7 +166,7 @@ export class MyRoom extends Room<GameState> {
     // run physics simulation
     Engine.update(this.engine, millis);
     // sync positions
-    for (const [bodySchema, matterBody] of this.matterMap) {
+    for (const [bodySchema, matterBody] of this.schemaToMatterBodyMap) {
       bodySchema.position.x = matterBody.position.x;
       bodySchema.position.y = matterBody.position.y;
     }
@@ -158,7 +188,18 @@ export class MyRoom extends Room<GameState> {
       body.radius
     );
     World.add(this.engine.world, matterBody);
-    this.matterMap.set(body, matterBody);
+    this.schemaToMatterBodyMap.set(body, matterBody);
+    this.matterBodyToSchemaBodyMap.set(matterBody, body);
+
+    // TODO put this into game rules
+    body.isCatcher = false;
+    let catchingPlayer = false;
+    for (const [_, body] of this.state.bodies) {
+      if (body.isCatcher) catchingPlayer = true;
+    }
+    if (!catchingPlayer) {
+      body.isCatcher = true;
+    }
   }
 
   onLeave(client: Client, consented: boolean) {
@@ -167,10 +208,11 @@ export class MyRoom extends Room<GameState> {
     if (player) this.state.players.delete(player.id);
     if (body) {
       this.state.bodies.delete(body.id);
-      const matterBody = this.matterMap.get(body);
+      const matterBody = this.schemaToMatterBodyMap.get(body);
       if (matterBody) {
         World.remove(this.engine.world, matterBody);
-        this.matterMap.delete(body);
+        this.schemaToMatterBodyMap.delete(body);
+        this.matterBodyToSchemaBodyMap.delete(matterBody);
       }
     }
   }

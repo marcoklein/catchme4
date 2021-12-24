@@ -1,6 +1,7 @@
 import { Schema } from "@colyseus/schema";
 import { Client } from "colyseus.js";
 import { GameObjects } from "phaser";
+import { BodySchema } from "../generated/BodySchema";
 import { GameState } from "../generated/GameState";
 import { DEPTH } from "../globals";
 import { createLogger } from "../logger";
@@ -74,6 +75,32 @@ export async function connectNetworkClient(scene: GameScene) {
       tank?.destroy();
       bodiesMap.delete(body);
     };
+
+    let catcherEmitter:
+      | Phaser.GameObjects.Particles.ParticleEmitter
+      | undefined;
+    let particles:
+      | Phaser.GameObjects.Particles.ParticleEmitterManager
+      | undefined;
+    body.listen("isCatcher", (isCatcher) => {
+      if (isCatcher) {
+        if (!catcherEmitter || !particles) {
+          particles = scene.add.particles("particle.red");
+          catcherEmitter = particles.createEmitter({});
+        }
+        catcherEmitter.setScale(0.3);
+        catcherEmitter.setSpeed(30);
+        catcherEmitter.setLifespan(100);
+        catcherEmitter.setBlendMode(Phaser.BlendModes.ADD);
+        catcherEmitter.startFollow(bodySprite);
+        particles.setDepth(DEPTH.backgroundEffect);
+      } else if (particles) {
+        log("destroying particles");
+        particles.destroy();
+        particles = undefined;
+        catcherEmitter = undefined;
+      }
+    });
 
     body.triggerAll();
   };

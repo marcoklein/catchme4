@@ -31,6 +31,10 @@ export class TileMap extends Schema {
   @type({ map: Tile }) tiles = new MapSchema<Tile>();
   @type(Dimension) mapSize = new Dimension();
   @type("number") tileSize = 64;
+
+  getTileAt(x: number, y: number) {
+    return this.tiles.get(`${x};${y}`);
+  }
 }
 
 export class BodySchema extends Schema {
@@ -39,6 +43,7 @@ export class BodySchema extends Schema {
   @type("number") speed: number = 0.1;
   @type(Position) moveDirection: Position = new Position();
   @type("number") radius: number = 1;
+  @type("boolean") isCatcher: boolean = false;
 
   constructor(id: string) {
     super();

@@ -1,5 +1,6 @@
 export const DEPTH = {
   body: 100,
-  ground: 10,
+  ground: -1,
+  backgroundEffect: 90,
   tile: 20,
 };

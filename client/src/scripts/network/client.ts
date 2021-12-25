@@ -1,13 +1,10 @@
-import { Schema } from "@colyseus/schema";
 import { Client } from "colyseus.js";
-import { GameObjects } from "phaser";
 import { GameState } from "../generated/GameState";
 import { DEPTH } from "../globals";
 import { createLogger } from "../logger";
-import BodySprite from "../objects/Body";
-import TileImage from "../objects/TileImage";
 import GameScene from "../scenes/GameScene";
 import { bodySynchronizer } from "./bodySynchronizer";
+import { GameObjects } from "phaser";
 const log = createLogger("client");
 
 export async function connectNetworkClient(scene: GameScene) {
@@ -36,6 +33,12 @@ export async function connectNetworkClient(scene: GameScene) {
         0xcccccc
       );
       worldBoundary.setDepth(DEPTH.ground);
+      // change game size to match tile map
+      scene.scale.setGameSize(
+        room.state.tileMap.mapSize.width * tileMap.tileSize,
+        room.state.tileMap.mapSize.height * tileMap.tileSize
+      );
+      scene.cameras.main.centerOn(0, 0);
     };
   });
 
@@ -61,22 +64,39 @@ export async function connectNetworkClient(scene: GameScene) {
 
   const tileGroup = scene.add.group();
   room.state.listen("tileMap", (tileMap) => {
+    const mapWidthInPixel = tileMap.mapSize.width * tileMap.tileSize;
+    const mapHeightInPixel = tileMap.mapSize.height * tileMap.tileSize;
     const tileWorldX = -tileMap.mapSize.width * tileMap.tileSize * 0.5;
     const tileWorldY = -tileMap.mapSize.height * tileMap.tileSize * 0.5;
     tileMap.listen("tiles", (tiles) => {
       tiles.onAdd = (tile, key) => {
-        const tileSprite = new TileImage(
-          scene,
-          tileWorldX + tile.position.x * tileMap.tileSize,
-          tileWorldY + tile.position.y * tileMap.tileSize,
-          "tile.wall.1"
-        );
-        tileSprite.setOrigin(0, 0);
-        tileGroup.add(tileSprite);
+        let tileImage: GameObjects.Image | undefined;
+        tile.listen("texture", () => {
+          if (tileImage) {
+            tileGroup.remove(tileImage, true, true);
+            tileImage = undefined;
+          }
+          // TODO refactor into factory for tile image
+          tileImage = new GameObjects.Image(
+            scene,
+            tileWorldX + tile.position.x * tileMap.tileSize,
+            tileWorldY + tile.position.y * tileMap.tileSize,
+            tile.texture.key,
+            tile.texture.frameKey || tile.texture.frameIndex
+          );
+          tileImage.setDisplaySize(tileMap.tileSize, tileMap.tileSize);
+          tileImage.setDepth(tile.layer || DEPTH.tile);
+          tileImage.setOrigin(0, 0);
+          tileGroup.add(tileImage);
+          scene.add.existing(tileImage);
+        });
         log("new tile %s", key);
         tile.onRemove = () => {
-          tileGroup.remove(tileSprite, true, true);
-          log("removed tile %s", key);
+          if (tileImage) {
+            tileGroup.remove(tileImage, true, true);
+            tileImage = undefined;
+            log("removed tile %s", key);
+          }
         };
       };
     });

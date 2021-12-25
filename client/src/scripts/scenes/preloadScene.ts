@@ -5,8 +5,15 @@ export default class PreloadScene extends Phaser.Scene {
 
   preload() {
     this.load.image("body.blue.1", "assets/sprites/body.blue.1.png");
-    this.load.image("tile.wall.1", "assets/sprites/tile.wall.png");
     this.load.image("particle.red", "assets/particles/red.png");
+    this.load.image("tile.wall.1", "assets/sprites/tile.wall.png");
+    this.load.image("tile.dirt", "assets/sprites/dirt.png");
+    this.load.image("tile.tree", "assets/sprites/treeSmall.png");
+    this.load.spritesheet(
+      "tilesheet.grass",
+      "assets/tilesheets/groundGrass.png",
+      { frameWidth: 64, frameHeight: 64 }
+    );
   }
 
   create() {

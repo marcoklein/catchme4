@@ -2,6 +2,7 @@ import { Client, Room } from "colyseus";
 import { Bodies, Body, Engine, Events, Vector, World } from "matter-js";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
+import { createTileMap } from "./TileMapController";
 import { DirectionMessage } from "./messages/DirectionMessage";
 import {
   BodySchema,
@@ -55,7 +56,7 @@ export class MyRoom extends Room<GameState> {
       environment.SIMULATION_INTERVAL
     );
     this.createPhysics();
-    this.createTileMap();
+    this.initTileMap();
 
     const tileMap = this.state.tileMap;
     this.createWorldBoundaries(
@@ -126,29 +127,18 @@ export class MyRoom extends Room<GameState> {
     ]);
   }
 
-  private createTileMap() {
-    const tileMap = new TileMap();
-    tileMap.mapSize.width = 15;
-    tileMap.mapSize.height = 10;
-    tileMap.tileSize = 64;
-    for (let i = 0; i < tileMap.mapSize.width * tileMap.mapSize.height; i++) {
-      if (i % 13 === 0 || Math.random() < 0.05) {
-        const tile = new Tile();
-        const x = i % tileMap.mapSize.width;
-        const y = Math.floor(i / tileMap.mapSize.width);
-        tile.position.x = x;
-        tile.position.y = y;
-        tile.type = "tile.wall.1";
-        tileMap.tiles.set(`${tile.position.x};${tile.position.y}`, tile);
-      }
-    }
+  private initTileMap() {
+    const tileMap = createTileMap();
+
     this.state.tileMap = tileMap;
 
+    // TODO add to TileMapController.ts
     const tileWorldX =
       -tileMap.mapSize.width * tileMap.tileSize * 0.5 + tileMap.tileSize / 2;
     const tileWorldY =
       -tileMap.mapSize.height * tileMap.tileSize * 0.5 + tileMap.tileSize / 2;
     this.state.tileMap.tiles.forEach((tile) => {
+      if (tile.walkable) return;
       World.add(
         this.engine.world,
         Bodies.rectangle(

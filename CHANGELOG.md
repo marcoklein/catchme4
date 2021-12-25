@@ -4,6 +4,7 @@
 
 ## 0.2.0
 
+- trees players can hide under
 - generate tile map
 - bodies collide with tiles
 

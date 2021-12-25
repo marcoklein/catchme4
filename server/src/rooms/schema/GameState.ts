@@ -21,10 +21,33 @@ export class Dimension extends Schema {
   @type("number") height: number = 0;
 }
 
+export class Texture extends Schema {
+  @type("string") key: string;
+  @type("string") frameKey?: string;
+  @type("int8") frameIndex?: number;
+
+  constructor(key: string, frame?: string | number) {
+    super();
+    this.key = key;
+    if (frame)
+      if (typeof frame === "string") this.frameKey = frame;
+      else this.frameIndex = frame;
+  }
+}
+export const TILE_LAYER_GROUND = 10;
+export const TILE_LAYER_FOREGROUND = 110;
+
 export class Tile extends Schema {
   @type("string") type = "";
+  @type(Texture) texture: Texture;
   @type(Position) position = new Position();
   @type("boolean") walkable = true;
+  @type("int8") layer = TILE_LAYER_GROUND;
+
+  constructor(texture: Texture) {
+    super();
+    this.texture = texture;
+  }
 }
 
 export class TileMap extends Schema {

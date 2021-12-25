@@ -10,7 +10,9 @@
   ],
   "scripts": {
     "start": "lerna run start --parallel",
-    "deploy": "lerna run deploy --scope @catchme4/client"
+    "build": "lerna run build --parallel",
+    "deploy": "yarn build && lerna run deploy --scope @catchme4/client",
+    "schema": "lerna run codegen:schema --scope @catchme4/server"
   },
   "devDependencies": {
     "lerna": "^4.0.0"

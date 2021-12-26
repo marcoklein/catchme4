@@ -2,31 +2,27 @@ import { Client, Room } from "colyseus";
 import { Bodies, Body, Engine, Events, Vector, World } from "matter-js";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
-import { createTileMap } from "./TileMapController";
+import { SprintAction } from "./actions/SprintAction";
+import { BodyFactory } from "./BodyFactory";
+import { gameEnvironment } from "./gameEnvironment";
 import { DirectionMessage } from "./messages/DirectionMessage";
-import {
-  BodySchema,
-  GameState,
-  Player,
-  Tile,
-  TileMap,
-} from "./schema/GameState";
+import { BodySchema, GameState, Player } from "./schema/GameState";
+import { createTileMap } from "./TileMapController";
 const log = createLogger("gameroom");
 
-export class ServerBody {
-  directions = { up: false, down: false, left: false, right: false };
-}
-
 export class MyRoom extends Room<GameState> {
-  lastBodyId = 1;
   engine!: Engine;
   schemaToMatterBodyMap = new Map<BodySchema, Body>();
   matterBodyToSchemaBodyMap = new Map<Body, BodySchema>();
+  bodyFactory = new BodyFactory();
+  sprintLogic = new SprintAction();
 
   onCreate(options: any) {
     this.setState(new GameState());
     this.schemaToMatterBodyMap = new Map();
     this.matterBodyToSchemaBodyMap = new Map();
+    this.bodyFactory = new BodyFactory();
+    this.sprintLogic = new SprintAction();
 
     this.onMessage<DirectionMessage>("direction", (client, message) => {
       log("direction message", message, "from", client.sessionId);
@@ -51,6 +47,7 @@ export class MyRoom extends Room<GameState> {
         }
       }
     });
+    this.sprintLogic.attachToRoom(this, this.state);
     this.setSimulationInterval(
       (millis) => this.update(millis),
       environment.SIMULATION_INTERVAL
@@ -79,7 +76,9 @@ export class MyRoom extends Room<GameState> {
           const catchBody = (bodyA: BodySchema, bodyB: BodySchema) => {
             if (bodyA.isCatcher && !bodyB.isCatcher) {
               bodyA.isCatcher = false;
+              bodyA.maxEnergy = gameEnvironment.normalEnergy;
               bodyB.isCatcher = true;
+              bodyB.maxEnergy = gameEnvironment.catcherEnergy;
               return true;
             }
             return false;
@@ -155,8 +154,11 @@ export class MyRoom extends Room<GameState> {
   }
 
   update(millis: number) {
-    // update body forces / directions
+    // apply body effects
     this.state.bodies.forEach((body) => {
+      this.sprintLogic.updateBody(millis, body);
+
+      // update body forces / directions
       const matterBody = this.schemaToMatterBodyMap.get(body);
       if (!matterBody) return;
       const speed = body.speed;
@@ -178,12 +180,9 @@ export class MyRoom extends Room<GameState> {
   onJoin(client: Client, options: any) {
     log(client.sessionId, "joined!");
     const player = new Player(client.sessionId, "<player name>");
-    const body = new BodySchema(`${this.lastBodyId++}`);
-    body.radius = 16;
-    body.position.x = 50;
-    body.position.y = 50;
-    player.bodyId = body.id;
     this.state.players.set(player.id, player);
+    const body = this.bodyFactory.createPlayerBody();
+    player.bodyId = body.id;
     this.state.bodies.set(body.id, body);
     const matterBody = Bodies.circle(
       body.position.x,
@@ -202,6 +201,7 @@ export class MyRoom extends Room<GameState> {
     }
     if (!catchingPlayer) {
       body.isCatcher = true;
+      body.maxEnergy = gameEnvironment.catcherEnergy;
     }
   }
 

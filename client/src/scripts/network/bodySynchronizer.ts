@@ -23,14 +23,14 @@ export function bodySynchronizer(scene: GameScene, body: BodySchema) {
   };
 
   let catcherEmitter: Phaser.GameObjects.Particles.ParticleEmitter | undefined;
-  let particles:
+  let catcherParticles:
     | Phaser.GameObjects.Particles.ParticleEmitterManager
     | undefined;
   const destroyParticles = () => {
-    if (particles) {
+    if (catcherParticles) {
       log("destroying particles");
-      particles.destroy();
-      particles = undefined;
+      catcherParticles.destroy();
+      catcherParticles = undefined;
       catcherEmitter = undefined;
     }
   };
@@ -43,17 +43,17 @@ export function bodySynchronizer(scene: GameScene, body: BodySchema) {
 
   body.listen("isCatcher", (isCatcher) => {
     if (isCatcher) {
-      if (!catcherEmitter || !particles) {
-        particles = scene.add.particles("particle.red");
-        catcherEmitter = particles.createEmitter({});
+      if (!catcherEmitter || !catcherParticles) {
+        catcherParticles = scene.add.particles("particle.red");
+        catcherEmitter = catcherParticles.createEmitter({});
       }
       catcherEmitter.setScale(0.3);
       catcherEmitter.setSpeed(30);
       catcherEmitter.setLifespan(100);
       catcherEmitter.setBlendMode(Phaser.BlendModes.ADD);
       catcherEmitter.startFollow(bodySprite);
-      particles.setDepth(DEPTH.backgroundEffect);
-    } else if (particles) {
+      catcherParticles.setDepth(DEPTH.backgroundEffect);
+    } else if (catcherParticles) {
       destroyParticles();
     }
   });

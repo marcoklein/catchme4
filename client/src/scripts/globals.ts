@@ -3,4 +3,5 @@ export const DEPTH = {
   ground: -1,
   backgroundEffect: 90,
   tile: 20,
+  text: 200,
 };

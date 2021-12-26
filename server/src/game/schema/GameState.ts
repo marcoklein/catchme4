@@ -1,4 +1,5 @@
 import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
+import { SprintActionRules } from "../actions/SprintAction";
 
 export class Player extends Schema {
   @type("string") id: string;
@@ -60,6 +61,14 @@ export class TileMap extends Schema {
   }
 }
 
+// export class BodyEffect extends Schema {
+//   @type("number") duration: number = 0;
+// }
+
+// export class SpeedEffect extends BodyEffect {
+//   @type("number") speed: number = 1.5;
+// }
+
 export class BodySchema extends Schema {
   @type("string") id: string;
   @type(Position) position: Position = new Position();
@@ -68,16 +77,27 @@ export class BodySchema extends Schema {
   @type("number") radius: number = 1;
   @type("boolean") isCatcher: boolean = false;
 
+  @type("number") energy: number = 100;
+  @type("number") maxEnergy: number = 100;
+  wantsToSprint: boolean = false;
+  @type("boolean") isSprinting: boolean = false;
+  @type("number") sprintDuration: number = 0;
+
   constructor(id: string) {
     super();
     this.id = id;
   }
 }
 
+export class GameRules extends Schema {
+  @type(SprintActionRules) sprintActionRules = new SprintActionRules();
+}
+
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
   @type(TileMap) tileMap = new TileMap();
+  @type(GameRules) gameRules = new GameRules();
 
   findPlayerAndBody(sessionId: string) {
     const player = this.players.get(sessionId);

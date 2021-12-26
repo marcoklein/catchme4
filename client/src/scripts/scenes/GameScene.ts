@@ -1,9 +1,13 @@
-import FpsText from "../objects/FpsText";
-import { connectNetworkClient } from "../network/client";
+import { NetworkSynchronizer } from "../network/client";
 import { initInput } from "../input/input";
+import HudScene from "./HudScene";
+import { GameState } from "../generated/GameState";
+import { Room } from "colyseus.js";
 
 export default class GameScene extends Phaser.Scene {
-  fpsText;
+  private hudScene: HudScene;
+  private room: Room<GameState>;
+  private network: NetworkSynchronizer;
 
   constructor() {
     super({ key: "GameScene" });
@@ -11,20 +15,20 @@ export default class GameScene extends Phaser.Scene {
 
   async create() {
     this.cameras.main.centerOn(0, 0);
-    this.fpsText = new FpsText(this);
+    this.hudScene = this.scene.add("HudScene", HudScene, true) as HudScene;
 
-    // display the Phaser.VERSION
-    this.add
-      .text(this.cameras.main.width - 15, 15, `Phaser v${Phaser.VERSION}`, {
-        color: "#000000",
-        fontSize: "24px",
-      })
-      .setOrigin(1, 0);
-    const room = await connectNetworkClient(this);
-    initInput(this, room);
+    this.network = new NetworkSynchronizer(this);
+    this.room = await this.network.connect();
+    initInput(this, this.room);
   }
 
   update() {
-    this.fpsText.update();
+    if (this.network.ownPlayer) {
+      const playerBody = this.room.state.bodies.get(
+        this.network.ownPlayer.bodyId
+      );
+      if (playerBody)
+        this.hudScene.updateEnergy(playerBody.energy, playerBody.maxEnergy);
+    }
   }
 }

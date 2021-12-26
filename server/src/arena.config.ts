@@ -4,7 +4,7 @@ import { monitor } from "@colyseus/monitor";
 /**
  * Import your Room files
  */
-import { MyRoom } from "./rooms/GameRoom";
+import { MyRoom } from "./game/GameRoom";
 
 export default Arena({
   getId: () => "CatchMe 4",

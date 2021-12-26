@@ -7,6 +7,9 @@
 - trees players can hide under
 - generate tile map
 - bodies collide with tiles
+- introduce energy levels of bodies
+- players can sprint with `SPACE`
+- catcher gets more energy
 
 ## 0.1.0
 

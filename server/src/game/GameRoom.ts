@@ -6,6 +6,7 @@ import { SprintAction } from "./actions/SprintAction";
 import { BodyFactory } from "./BodyFactory";
 import { gameEnvironment } from "./gameEnvironment";
 import { DirectionMessage } from "./messages/DirectionMessage";
+import { PingMessage } from "./messages/PingMessage";
 import { BodySchema, GameState, Player } from "./schema/GameState";
 import { createTileMap } from "./TileMapController";
 const log = createLogger("gameroom");
@@ -24,6 +25,9 @@ export class MyRoom extends Room<GameState> {
     this.bodyFactory = new BodyFactory();
     this.sprintLogic = new SprintAction();
 
+    this.onMessage<PingMessage>("ping", (client, pingId) =>
+      client.send("pong", pingId)
+    );
     this.onMessage<DirectionMessage>("direction", (client, message) => {
       log("direction message", message, "from", client.sessionId);
       const { body } = this.state.findPlayerAndBody(client.sessionId);

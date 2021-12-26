@@ -1,12 +1,12 @@
 import { Client, Room } from "colyseus.js";
+import { GameObjects } from "phaser";
 import { GameState } from "../generated/GameState";
+import { Player } from "../generated/Player";
 import { DEPTH } from "../globals";
 import { createLogger } from "../logger";
 import GameScene from "../scenes/GameScene";
 import { bodySynchronizer } from "./bodySynchronizer";
-import { GameObjects } from "phaser";
-import { Player } from "../generated/Player";
-import { BodySchema } from "../generated/BodySchema";
+import { PingHandler } from "./PingHandler";
 const log = createLogger("client");
 
 export class NetworkSynchronizer {

@@ -1,184 +1,87 @@
 import { Client, Room } from "colyseus";
-import { Bodies, Body, Engine, Events, Vector, World } from "matter-js";
+import { Bodies, Body, Engine, World } from "matter-js";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
 import { SprintAction } from "./actions/SprintAction";
 import { BodyFactory } from "./BodyFactory";
-import { gameEnvironment } from "./gameEnvironment";
-import { DirectionMessage } from "./messages/DirectionMessage";
-import { PingMessage } from "./messages/PingMessage";
+import { CreatePhysicsController } from "./controllers/CreatePhysics";
+import { CreateTileMap } from "./controllers/CreateTileMap";
+import { UpdateBodyMoveDirection } from "./controllers/UpdateBodyMoveDirection";
+import { UpdatePhysicalBodyPosition } from "./controllers/UpdatePhysicalBodyPosition";
+import { GameController } from "./GameController";
+import { GameEvents } from "./GameEvents";
+import { HandleDirectionMessage } from "./messages/HandleDirectionMessage";
+import { HandlePingMessage } from "./messages/HandlePingMessage";
+import { CatchTimerRule } from "./rules/CatchTimerRule";
+import { InitialCatcherGameRule } from "./rules/InitialCatcherGameRule";
+import { TotalGameTimeRule } from "./rules/TotalGameTimeRule";
 import { BodySchema, GameState, Player } from "./schema/GameState";
-import { createTileMap } from "./TileMapController";
 const log = createLogger("gameroom");
 
-export class MyRoom extends Room<GameState> {
+export type FinishGameReason = "totalTime";
+
+export class GameRoom extends Room<GameState> {
   engine!: Engine;
   schemaToMatterBodyMap = new Map<BodySchema, Body>();
   matterBodyToSchemaBodyMap = new Map<Body, BodySchema>();
   bodyFactory = new BodyFactory();
-  sprintLogic = new SprintAction();
+  gameEvents = new GameEvents();
+  controllers: GameController[] = [];
+
+  finishGame(reason: FinishGameReason) {
+    // TODO finish this game session
+    log('finishing game with reason "%s"', reason);
+  }
 
   onCreate(options: any) {
     this.setState(new GameState());
     this.schemaToMatterBodyMap = new Map();
     this.matterBodyToSchemaBodyMap = new Map();
     this.bodyFactory = new BodyFactory();
-    this.sprintLogic = new SprintAction();
+    this.gameEvents = new GameEvents();
+    this.controllers = [
+      new CreatePhysicsController(),
+      new CreateTileMap(),
+      new UpdateBodyMoveDirection(),
+      new UpdatePhysicalBodyPosition(),
 
-    this.onMessage<PingMessage>("ping", (client, pingId) =>
-      client.send("pong", pingId)
-    );
-    this.onMessage<DirectionMessage>("direction", (client, message) => {
-      log("direction message", message, "from", client.sessionId);
-      const { body } = this.state.findPlayerAndBody(client.sessionId);
-      if (body) {
-        let moveX = 0;
-        let moveY = 0;
-        if (message.down) moveY++;
-        if (message.up) moveY--;
-        if (message.left) moveX--;
-        if (message.right) moveX++;
-        if (moveX !== 0 || moveY !== 0) {
-          log("move direction %j", { moveX, moveY });
-          const { x, y } = Vector.normalise(Vector.create(moveX, moveY));
-          log("after direction %j", { x, y });
-          body.moveDirection.x = x;
-          body.moveDirection.y = y;
-          log("move direction %j", body.moveDirection);
-        } else {
-          body.moveDirection.x = 0;
-          body.moveDirection.y = 0;
-        }
-      }
+      new HandleDirectionMessage(),
+      new HandlePingMessage(),
+
+      new InitialCatcherGameRule(),
+      new CatchTimerRule(),
+      new TotalGameTimeRule(),
+
+      new SprintAction(),
+    ];
+    this.engine = Engine.create({
+      gravity: { x: 0, y: 0 },
     });
-    this.sprintLogic.attachToRoom(this, this.state);
+
     this.setSimulationInterval(
       (millis) => this.update(millis),
       environment.SIMULATION_INTERVAL
     );
-    this.createPhysics();
-    this.initTileMap();
 
-    const tileMap = this.state.tileMap;
-    this.createWorldBoundaries(
-      tileMap.mapSize.width * tileMap.tileSize,
-      tileMap.mapSize.height * tileMap.tileSize
+    this.controllers.forEach((controller) =>
+      controller.attachToRoom?.call(controller, this, this.state)
     );
-  }
-
-  private createPhysics() {
-    this.engine = Engine.create({
-      gravity: { x: 0, y: 0 },
-    });
-    // TODO put this into game rules
-    Events.on(this.engine, "collisionStart", (e) => {
-      e.pairs.forEach((pair) => {
-        const bodyA = this.matterBodyToSchemaBodyMap.get(pair.bodyA);
-        const bodyB = this.matterBodyToSchemaBodyMap.get(pair.bodyB);
-
-        if (bodyA && bodyB) {
-          const catchBody = (bodyA: BodySchema, bodyB: BodySchema) => {
-            if (bodyA.isCatcher && !bodyB.isCatcher) {
-              bodyA.isCatcher = false;
-              bodyA.maxEnergy = gameEnvironment.normalEnergy;
-              bodyB.isCatcher = true;
-              bodyB.maxEnergy = gameEnvironment.catcherEnergy;
-              return true;
-            }
-            return false;
-          };
-          if (!catchBody(bodyA, bodyB)) catchBody(bodyB, bodyA);
-        }
-      });
-    });
-  }
-
-  private createWorldBoundaries(
-    width: number,
-    height: number,
-    thickness = 100
-  ) {
-    const x = -width / 2,
-      y = -height / 2;
-    World.add(this.engine.world, [
-      Bodies.rectangle(
-        x - thickness + (width + 2 * thickness) / 2,
-        y - thickness / 2,
-        width + 2 * thickness,
-        thickness,
-        {
-          isStatic: true,
-        }
-      ),
-      Bodies.rectangle(
-        x + width + thickness / 2,
-        y + height / 2,
-        thickness,
-        height,
-        { isStatic: true }
-      ),
-      Bodies.rectangle(
-        x - thickness + (width + 2 * thickness) / 2,
-        y + height + thickness / 2,
-        width + 2 * thickness,
-        thickness,
-        { isStatic: true }
-      ),
-      Bodies.rectangle(x - thickness / 2, y + height / 2, thickness, height, {
-        isStatic: true,
-      }),
-    ]);
-  }
-
-  private initTileMap() {
-    const tileMap = createTileMap();
-
-    this.state.tileMap = tileMap;
-
-    // TODO add to TileMapController.ts
-    const tileWorldX =
-      -tileMap.mapSize.width * tileMap.tileSize * 0.5 + tileMap.tileSize / 2;
-    const tileWorldY =
-      -tileMap.mapSize.height * tileMap.tileSize * 0.5 + tileMap.tileSize / 2;
-    this.state.tileMap.tiles.forEach((tile) => {
-      if (tile.walkable) return;
-      World.add(
-        this.engine.world,
-        Bodies.rectangle(
-          tileWorldX + tile.position.x * tileMap.tileSize,
-          tileWorldY + tile.position.y * tileMap.tileSize,
-          tileMap.tileSize,
-          tileMap.tileSize,
-          {
-            isStatic: true,
-          }
-        )
-      );
-    });
   }
 
   update(millis: number) {
     // apply body effects
-    this.state.bodies.forEach((body) => {
-      this.sprintLogic.updateBody(millis, body);
-
-      // update body forces / directions
-      const matterBody = this.schemaToMatterBodyMap.get(body);
-      if (!matterBody) return;
-      const speed = body.speed;
-      const force = Vector.mult(body.moveDirection, speed * millis * 0.002);
-      Body.applyForce(matterBody, body.position, force);
-      matterBody.friction = 0.9;
-      matterBody.frictionAir = 0.9;
-      matterBody.frictionStatic = 0.9;
-    });
+    this.state.bodies.forEach((body) =>
+      this.controllers.forEach((controller) =>
+        // TODO optimization: do not call update methods on all objects but filter
+        // different controller methods into separate lists!
+        controller.updateBody?.call(controller, this, millis, body)
+      )
+    );
+    this.controllers.forEach((controller) =>
+      controller.update?.call(controller, this, millis)
+    );
     // run physics simulation
     Engine.update(this.engine, millis);
-    // sync positions
-    for (const [bodySchema, matterBody] of this.schemaToMatterBodyMap) {
-      bodySchema.position.x = matterBody.position.x;
-      bodySchema.position.y = matterBody.position.y;
-    }
   }
 
   onJoin(client: Client, options: any) {
@@ -196,17 +99,7 @@ export class MyRoom extends Room<GameState> {
     World.add(this.engine.world, matterBody);
     this.schemaToMatterBodyMap.set(body, matterBody);
     this.matterBodyToSchemaBodyMap.set(matterBody, body);
-
-    // TODO put this into game rules
-    body.isCatcher = false;
-    let catchingPlayer = false;
-    for (const [_, body] of this.state.bodies) {
-      if (body.isCatcher) catchingPlayer = true;
-    }
-    if (!catchingPlayer) {
-      body.isCatcher = true;
-      body.maxEnergy = gameEnvironment.catcherEnergy;
-    }
+    this.gameEvents.emit("newPlayer", { player, body });
   }
 
   onLeave(client: Client, consented: boolean) {

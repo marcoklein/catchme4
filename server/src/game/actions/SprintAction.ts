@@ -1,10 +1,12 @@
 import { Schema, type } from "@colyseus/schema";
-import { Room } from "colyseus";
 import { createLogger } from "../../logger";
+import { GameController } from "../GameController";
 import { gameEnvironment } from "../gameEnvironment";
-import { SprintMessage } from "../messages/SprintMessage";
+import { GameRoom } from "../GameRoom";
 import { BodySchema, GameState } from "../schema/GameState";
 const log = createLogger("sprintlogic");
+
+export type SprintMessage = boolean;
 
 export class SprintActionRules extends Schema {
   /**
@@ -18,10 +20,10 @@ export class SprintActionRules extends Schema {
     gameEnvironment.sprintEnergyDrainPerMillisecond;
 }
 
-export class SprintAction {
+export class SprintAction implements GameController {
   config = new SprintActionRules();
 
-  attachToRoom(room: Room<GameState>, state: GameState) {
+  attachToRoom(room: GameRoom, state: GameState) {
     this.config = state.gameRules.sprintActionRules;
     room.onMessage<SprintMessage>("sprint", (client, sprint) => {
       log("sprint message from %s", client.sessionId);
@@ -36,7 +38,7 @@ export class SprintAction {
     });
   }
 
-  updateBody(millis: number, body: BodySchema) {
+  updateBody(_room: GameRoom, millis: number, body: BodySchema) {
     // update body effects (e.g. player sprinting)
     body.speed = gameEnvironment.speedNormal;
     if (

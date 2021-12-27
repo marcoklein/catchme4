@@ -1,10 +1,13 @@
 import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
 import { SprintActionRules } from "../actions/SprintAction";
 
+export class PlayerStatisticsSchema extends Schema {}
+
 export class Player extends Schema {
   @type("string") id: string;
   @type("string") name: string;
   @type("string") bodyId: string = "";
+  @type(PlayerStatisticsSchema) stats = new PlayerStatisticsSchema();
 
   constructor(id: string, name: string) {
     super();
@@ -61,14 +64,6 @@ export class TileMap extends Schema {
   }
 }
 
-// export class BodyEffect extends Schema {
-//   @type("number") duration: number = 0;
-// }
-
-// export class SpeedEffect extends BodyEffect {
-//   @type("number") speed: number = 1.5;
-// }
-
 export class BodySchema extends Schema {
   @type("string") id: string;
   @type(Position) position: Position = new Position();
@@ -76,6 +71,8 @@ export class BodySchema extends Schema {
   @type(Position) moveDirection: Position = new Position();
   @type("number") radius: number = 1;
   @type("boolean") isCatcher: boolean = false;
+  @type("number") totalCatcherTimeMillis: number = 0;
+  @type("number") currentCatcherTimeMillis: number = 0;
 
   @type("number") energy: number = 100;
   @type("number") maxEnergy: number = 100;
@@ -91,13 +88,28 @@ export class BodySchema extends Schema {
 
 export class GameRules extends Schema {
   @type(SprintActionRules) sprintActionRules = new SprintActionRules();
+  @type("number") totalGameTimeMillis = 5000;
+}
+
+export class GameStatisticsSchema extends Schema {
+  @type("number") round = 0;
+  @type({ map: PlayerStatisticsSchema }) playerStatistics =
+    new MapSchema<PlayerStatisticsSchema>();
 }
 
 export class GameState extends Schema {
+  @type("string") state: "warmup" | "starting" | "running" | "finished" =
+    "warmup";
+  @type("number") startingCountdown = 10;
+  @type("number") remainingGameTimeMillis = 100;
+
   @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
   @type(TileMap) tileMap = new TileMap();
   @type(GameRules) gameRules = new GameRules();
+
+  @type(GameStatisticsSchema) statistics: GameStatisticsSchema =
+    new GameStatisticsSchema();
 
   findPlayerAndBody(sessionId: string) {
     const player = this.players.get(sessionId);

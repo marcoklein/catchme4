@@ -1,8 +1,6 @@
 import { createLogger } from "../../../logger";
-import { LevelController } from "../LevelController";
-import { GameRoom } from "../../GameRoom";
-import { GameState } from "../../schema/GameState";
 import { Level } from "../Level";
+import { LevelController } from "../LevelController";
 const log = createLogger("totalgametimerule");
 
 export class TotalGameTimeRule implements LevelController {
@@ -32,6 +30,7 @@ export class TotalGameTimeRule implements LevelController {
       // level.state.state === "running" &&
       level.state.remainingGameTimeMillis <= 0
     ) {
+      log("game time up! finishing game");
       level.finishLevel("totalTime");
       this.active = false;
     }

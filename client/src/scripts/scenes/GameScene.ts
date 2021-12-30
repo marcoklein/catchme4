@@ -36,11 +36,27 @@ export default class GameScene extends Phaser.Scene {
       );
       if (prevValue) {
         log("destroying old scene");
-        this.scene.stop("LevelScene");
+        try {
+          this.scene.remove("LevelScene");
+        } catch {
+          log("no previous scene to remove");
+        }
+        try {
+          this.scene.remove("HudScene");
+        } catch {
+          log("no previous HudScene to remove");
+        }
       }
-      if (value) {
-        this.scene.start("LevelScene", { network: this.network });
-      }
+      setTimeout(() => {
+        if (value) {
+          // this.scene.start({ network: this.network });
+          this.scene.add("LevelScene", LevelScene, true, {
+            network: this.network,
+          });
+          this.scene.bringToTop(this);
+          log("started level scene");
+        }
+      }, 0);
     });
   }
 

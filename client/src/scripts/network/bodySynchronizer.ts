@@ -11,8 +11,12 @@ export function bodySynchronizer(scene: LevelScene, body: BodySchema) {
   // adding new player to scene
   const bodySprite = new BodySprite(scene, 200, 200);
 
-  body.position.listen("x", (x) => bodySprite.setX(x));
-  body.position.listen("y", (y) => bodySprite.setY(y));
+  scene.levelListeners.push(
+    body.position.listen("x", (x) => bodySprite.setX(x))
+  );
+  scene.levelListeners.push(
+    body.position.listen("y", (y) => bodySprite.setY(y))
+  );
   body.moveDirection.onChange = () => {
     if (body.moveDirection.x !== 0 || body.moveDirection.y !== 0) {
       log("setting rotation %j", body.moveDirection);
@@ -41,22 +45,24 @@ export function bodySynchronizer(scene: LevelScene, body: BodySchema) {
     destroyParticles();
   };
 
-  body.listen("isCatcher", (isCatcher) => {
-    if (isCatcher) {
-      if (!catcherEmitter || !catcherParticles) {
-        catcherParticles = scene.add.particles("particle.red");
-        catcherEmitter = catcherParticles.createEmitter({});
+  scene.levelListeners.push(
+    body.listen("isCatcher", (isCatcher) => {
+      if (isCatcher) {
+        if (!catcherEmitter || !catcherParticles) {
+          catcherParticles = scene.add.particles("particle.red");
+          catcherEmitter = catcherParticles.createEmitter({});
+        }
+        catcherEmitter.setScale(0.3);
+        catcherEmitter.setSpeed(30);
+        catcherEmitter.setLifespan(100);
+        catcherEmitter.setBlendMode(Phaser.BlendModes.ADD);
+        catcherEmitter.startFollow(bodySprite);
+        catcherParticles.setDepth(DEPTH.backgroundEffect);
+      } else if (catcherParticles) {
+        destroyParticles();
       }
-      catcherEmitter.setScale(0.3);
-      catcherEmitter.setSpeed(30);
-      catcherEmitter.setLifespan(100);
-      catcherEmitter.setBlendMode(Phaser.BlendModes.ADD);
-      catcherEmitter.startFollow(bodySprite);
-      catcherParticles.setDepth(DEPTH.backgroundEffect);
-    } else if (catcherParticles) {
-      destroyParticles();
-    }
-  });
+    })
+  );
 
   body.triggerAll();
 }

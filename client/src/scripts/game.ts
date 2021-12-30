@@ -16,7 +16,7 @@ const config = {
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
   },
-  scene: [PreloadScene, GameScene, LevelScene],
+  scene: [PreloadScene, GameScene],
 };
 
 window.addEventListener("load", () => {

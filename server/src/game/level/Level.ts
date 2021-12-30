@@ -19,6 +19,9 @@ const log = createLogger("level");
 
 export type FinishGameReason = "totalTime";
 
+/**
+ * Controls logic for a level.
+ */
 export class Level {
   engine!: Engine;
   schemaToMatterBodyMap = new Map<BodySchema, Body>();
@@ -35,7 +38,14 @@ export class Level {
   }
 
   private changeLevel() {
-    this.state = this.room.state.level;
+    // destroy existing level
+    this.controllers.forEach((controller) => {
+      if (controller.detachFromLevel) controller.detachFromLevel(this);
+    });
+
+    // start new level
+    this.state = new GameLevelSchema();
+    this.room.state.level = this.state;
     this.schemaToMatterBodyMap = new Map();
     this.matterBodyToSchemaBodyMap = new Map();
     this.bodyFactory = new BodyFactory();
@@ -58,11 +68,13 @@ export class Level {
       gravity: { x: 0, y: 0 },
     });
 
-    this.controllers.forEach((controller) =>
-      controller.attachToLevel?.call(controller, this, this.state)
-    );
+    this.controllers.forEach((controller) => {
+      if (controller.attachToLevel) controller.attachToLevel(this, this.state);
+    });
 
-    this.room.state.players.forEach((player) => {});
+    this.room.state.players.forEach((player) => {
+      this.addPlayerBody(player);
+    });
     this.room.gameEvents.on("playerJoined", ({ player }) =>
       this.addPlayerBody(player)
     );
@@ -109,6 +121,7 @@ export class Level {
     // TODO finish this game session
     log('finishing game with reason "%s"', reason);
     this.room.state.level.state = "finished";
+    // TODO change level after time...
     this.changeLevel();
   }
 

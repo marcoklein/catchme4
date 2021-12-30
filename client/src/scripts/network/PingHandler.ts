@@ -3,6 +3,7 @@ import { environment } from "../environment";
 import { GameState } from "../generated/GameState";
 import { createLogger } from "../logger";
 import GameScene from "../scenes/GameScene";
+import LevelScene from "../scenes/LevelScene";
 const log = createLogger("ping");
 
 export class PingHandler {
@@ -32,7 +33,7 @@ export class PingHandler {
   }
 
   update(scene: GameScene) {
-    scene.hudScene.updatePing(this.getPing(), this.getPingText());
+    scene.updatePing(this.getPing(), this.getPingText());
   }
 
   attachToRoom(room: Room<GameState>) {

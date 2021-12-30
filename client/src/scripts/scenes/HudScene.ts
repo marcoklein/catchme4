@@ -2,7 +2,6 @@ import { GameObjects } from "phaser";
 
 export default class HudScene extends Phaser.Scene {
   private energyText: GameObjects.Text;
-  private pingText: GameObjects.Text;
   private statsContainer: Phaser.GameObjects.Container;
   gameFinishedText: Phaser.GameObjects.Text;
 
@@ -16,12 +15,6 @@ export default class HudScene extends Phaser.Scene {
       fontSize: "28px",
     });
     this.energyText.setOrigin(0, 0);
-
-    this.pingText = this.add.text(0, 0, "", {
-      color: "white",
-      fontSize: "14px",
-    });
-    this.pingText.setOrigin(0, 1);
 
     this.gameFinishedText = this.add.text(
       this.game.canvas.width / 2,
@@ -100,10 +93,5 @@ export default class HudScene extends Phaser.Scene {
     this.energyText.setText(
       `Energy: ${Math.floor(energy)}/${Math.floor(maxEnergy)}`
     );
-  }
-
-  updatePing(ping: number, connectionText: string) {
-    this.pingText.setText(`Ping: ${ping} (${connectionText})`);
-    this.pingText.setPosition(0, this.cameras.main.height);
   }
 }

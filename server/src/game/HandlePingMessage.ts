@@ -1,9 +1,8 @@
-import { GameController } from "../GameController";
-import { GameRoom } from "../GameRoom";
+import { GameRoom } from "./GameRoom";
 
 export type PingMessage = number;
 
-export class HandlePingMessage implements GameController {
+export class HandlePingMessage {
   attachToRoom(room: GameRoom) {
     room.onMessage<PingMessage>("ping", (client, pingId) =>
       client.send("pong", pingId)

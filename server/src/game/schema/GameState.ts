@@ -1,5 +1,5 @@
 import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
-import { SprintActionRules } from "../actions/SprintAction";
+import { SprintActionRules } from "../level/actions/SprintAction";
 
 export class PlayerStatisticsSchema extends Schema {}
 
@@ -86,7 +86,7 @@ export class BodySchema extends Schema {
   }
 }
 
-export class GameRules extends Schema {
+export class GameOptions extends Schema {
   @type(SprintActionRules) sprintActionRules = new SprintActionRules();
   @type("number") totalGameTimeMillis = 5000;
 }
@@ -97,31 +97,32 @@ export class GameStatisticsSchema extends Schema {
     new MapSchema<PlayerStatisticsSchema>();
 }
 
-export class GameState extends Schema {
+export class GameLevelSchema extends Schema {
   @type("string") state: "warmup" | "starting" | "running" | "finished" =
     "warmup";
   @type("number") startingCountdown = 10;
-  @type("number") remainingGameTimeMillis = 100;
+  @type("number") remainingGameTimeMillis = 0;
 
-  @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
   @type(TileMap) tileMap = new TileMap();
-  @type(GameRules) gameRules = new GameRules();
+}
 
+export class GameState extends Schema {
+  /**
+   * Players that connect to the game.
+   */
+  @type({ map: Player }) players = new MapSchema<Player>();
+  /**
+   * Active level of the game.
+   */
+  @type(GameLevelSchema) level = new GameLevelSchema();
+  /**
+   * Options and game rules for the current game overall.
+   */
+  @type(GameOptions) options = new GameOptions();
+  /**
+   * Statistics of all games.
+   */
   @type(GameStatisticsSchema) statistics: GameStatisticsSchema =
     new GameStatisticsSchema();
-
-  findPlayerAndBody(sessionId: string) {
-    const player = this.players.get(sessionId);
-    let body = undefined;
-    if (!player) {
-      console.error(`No player for session id ${sessionId}`);
-    } else {
-      body = this.bodies.get(player.bodyId);
-    }
-    return {
-      player,
-      body,
-    };
-  }
 }

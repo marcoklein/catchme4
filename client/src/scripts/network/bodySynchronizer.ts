@@ -2,10 +2,10 @@ import { BodySchema } from "../generated/BodySchema";
 import { DEPTH } from "../globals";
 import { createLogger } from "../logger";
 import BodySprite from "../objects/Body";
-import GameScene from "../scenes/GameScene";
+import LevelScene from "../scenes/LevelScene";
 const log = createLogger("client:body-synchronizer");
 
-export function bodySynchronizer(scene: GameScene, body: BodySchema) {
+export function bodySynchronizer(scene: LevelScene, body: BodySchema) {
   log("added new body with id", body.id);
 
   // adding new player to scene

@@ -2,6 +2,7 @@ import { GameObjects } from "phaser";
 
 export default class HudScene extends Phaser.Scene {
   private energyText: GameObjects.Text;
+  private totalGameTimeText: GameObjects.Text;
   private statsContainer: Phaser.GameObjects.Container;
   gameFinishedText: Phaser.GameObjects.Text;
 
@@ -15,6 +16,11 @@ export default class HudScene extends Phaser.Scene {
       fontSize: "28px",
     });
     this.energyText.setOrigin(0, 0);
+    this.totalGameTimeText = this.add.text(0, 0, "", {
+      color: "black",
+      fontSize: "28px",
+    });
+    this.totalGameTimeText.setOrigin(0.5, 0);
 
     this.gameFinishedText = this.add.text(
       this.game.canvas.width / 2,
@@ -93,5 +99,15 @@ export default class HudScene extends Phaser.Scene {
     this.energyText.setText(
       `Energy: ${Math.floor(energy)}/${Math.floor(maxEnergy)}`
     );
+  }
+
+  updateTotalTimeText(minutes: number, seconds: number) {
+    this.totalGameTimeText.setText(
+      `Time: ${Math.floor(minutes)}:${new String(Math.floor(seconds)).padStart(
+        2,
+        "0"
+      )}`
+    );
+    this.totalGameTimeText.setX(this.cameras.main.displayWidth / 2);
   }
 }

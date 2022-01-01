@@ -3,6 +3,9 @@ import { Level } from "../Level";
 import { LevelController } from "../LevelController";
 const log = createLogger("totalgametimerule");
 
+/**
+ * Activate with this rule to set a maximum game time.
+ */
 export class TotalGameTimeRule implements LevelController {
   active = false;
 

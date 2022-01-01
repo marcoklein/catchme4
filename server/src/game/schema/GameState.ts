@@ -101,7 +101,7 @@ export class GameLevelSchema extends Schema {
   @type("string") state: "warmup" | "starting" | "running" | "finished" =
     "warmup";
   @type("number") startingCountdown = 10;
-  @type("number") remainingGameTimeMillis = 0;
+  @type("number") remainingGameTimeMillis = -1;
 
   @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
   @type(TileMap) tileMap = new TileMap();

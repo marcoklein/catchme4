@@ -15,6 +15,7 @@
 ## 0.3.0
 
 - adding levels
+- levels have time limits
 
 ## 0.2.0
 

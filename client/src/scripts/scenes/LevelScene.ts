@@ -113,6 +113,13 @@ export default class LevelScene extends Phaser.Scene {
         );
       })
     );
+    this.levelListeners.push(
+      state.listen("remainingGameTimeMillis", (remainingGameTimeMillis) => {
+        const seconds = remainingGameTimeMillis / 1000;
+        const minutes = Math.floor(seconds / 60);
+        this.hudScene.updateTotalTimeText(minutes, Math.ceil(seconds % 60));
+      })
+    );
     state.triggerAll();
   }
 

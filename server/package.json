@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@catchme4/server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "npm init template for bootstrapping an empty Colyseus project",
   "main": "index.js",
   "scripts": {

@@ -1,9 +1,8 @@
-import { Engine, Body, World, Bodies } from "matter-js";
+import { Bodies, Body, Engine, World } from "matter-js";
 import { createLogger } from "../../logger";
 import { BodyFactory } from "../BodyFactory";
 import { GameRoom } from "../GameRoom";
 import { HandleDirectionMessage } from "../messages/HandleDirectionMessage";
-import { HandlePingMessage } from "../HandlePingMessage";
 import { BodySchema, GameLevelSchema, Player } from "../schema/GameState";
 import { SprintAction } from "./actions/SprintAction";
 import { CreatePhysicsController } from "./controllers/CreatePhysics";
@@ -35,6 +34,9 @@ export class Level {
   constructor(room: GameRoom) {
     this.room = room;
     this.changeLevel();
+    this.room.gameEvents.on("playerJoined", ({ player }) =>
+      this.addPlayerBody(player)
+    );
   }
 
   private changeLevel() {
@@ -42,9 +44,11 @@ export class Level {
     this.controllers.forEach((controller) => {
       if (controller.detachFromLevel) controller.detachFromLevel(this);
     });
+    this.room.state.players.forEach((player) => (player.bodyId = ""));
 
     // start new level
     this.state = new GameLevelSchema();
+    this.events = new LevelEvents();
     this.room.state.level = this.state;
     this.schemaToMatterBodyMap = new Map();
     this.matterBodyToSchemaBodyMap = new Map();
@@ -75,9 +79,6 @@ export class Level {
     this.room.state.players.forEach((player) => {
       this.addPlayerBody(player);
     });
-    this.room.gameEvents.on("playerJoined", ({ player }) =>
-      this.addPlayerBody(player)
-    );
     log("Initialized level");
   }
 
@@ -88,6 +89,15 @@ export class Level {
    * @param player
    */
   addPlayerBody(player: Player) {
+    if (player.bodyId.length) {
+      log(
+        "Cannot add player body cause player %s (%s) already has bodyId %s",
+        player.id,
+        player.name,
+        player.bodyId
+      );
+      return;
+    }
     const body = this.bodyFactory.createPlayerBody();
     player.bodyId = body.id;
     this.state.bodies.set(body.id, body);

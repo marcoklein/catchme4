@@ -1,7 +1,6 @@
-import { BodySchema, Player } from "./schema/GameState";
+import { Player } from "./schema/GameState";
 
 export type EVENTS = {
-  caught: { catcher?: BodySchema; caught: BodySchema };
   playerJoined: { player: Player };
   playerDisconnected: { player: Player };
 };

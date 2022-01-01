@@ -14,7 +14,7 @@ export class CatchTimerRule implements LevelController {
   config = new CatchTimerRules();
 
   attachToLevel(level: Level) {
-    level.room.gameEvents.on("caught", ({ catcher }) => {
+    level.events.on("caught", ({ catcher }) => {
       if (catcher) catcher.currentCatcherTimeMillis = 0;
     });
   }

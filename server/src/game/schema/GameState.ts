@@ -88,7 +88,7 @@ export class BodySchema extends Schema {
 
 export class GameOptions extends Schema {
   @type(SprintActionRules) sprintActionRules = new SprintActionRules();
-  @type("number") totalGameTimeMillis = 20000;
+  @type("number") totalGameTimeMillis = 5 * 1000 * 60;
 }
 
 export class GameStatisticsSchema extends Schema {

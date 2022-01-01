@@ -2,7 +2,7 @@ import { GameObjects } from "phaser";
 
 export default class HudScene extends Phaser.Scene {
   private energyText: GameObjects.Text;
-  private pingText: GameObjects.Text;
+  private totalGameTimeText: GameObjects.Text;
   private statsContainer: Phaser.GameObjects.Container;
   gameFinishedText: Phaser.GameObjects.Text;
 
@@ -16,12 +16,11 @@ export default class HudScene extends Phaser.Scene {
       fontSize: "28px",
     });
     this.energyText.setOrigin(0, 0);
-
-    this.pingText = this.add.text(0, 0, "", {
-      color: "white",
-      fontSize: "14px",
+    this.totalGameTimeText = this.add.text(0, 0, "", {
+      color: "black",
+      fontSize: "28px",
     });
-    this.pingText.setOrigin(0, 1);
+    this.totalGameTimeText.setOrigin(0.5, 0);
 
     this.gameFinishedText = this.add.text(
       this.game.canvas.width / 2,
@@ -102,8 +101,13 @@ export default class HudScene extends Phaser.Scene {
     );
   }
 
-  updatePing(ping: number, connectionText: string) {
-    this.pingText.setText(`Ping: ${ping} (${connectionText})`);
-    this.pingText.setPosition(0, this.cameras.main.height);
+  updateTotalTimeText(minutes: number, seconds: number) {
+    this.totalGameTimeText.setText(
+      `Time: ${Math.floor(minutes)}:${new String(Math.floor(seconds)).padStart(
+        2,
+        "0"
+      )}`
+    );
+    this.totalGameTimeText.setX(this.cameras.main.displayWidth / 2);
   }
 }

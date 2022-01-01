@@ -12,6 +12,11 @@
 - destroy obstacles by walking against them
 - create tiles that accelerate a body
 
+## 0.3.0
+
+- adding levels
+- levels have time limits
+
 ## 0.2.0
 
 - show a ping for clients to know their latency

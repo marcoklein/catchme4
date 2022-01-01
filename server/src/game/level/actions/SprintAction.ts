@@ -1,9 +1,10 @@
 import { Schema, type } from "@colyseus/schema";
-import { createLogger } from "../../logger";
-import { GameController } from "../GameController";
-import { gameEnvironment } from "../gameEnvironment";
-import { GameRoom } from "../GameRoom";
-import { BodySchema, GameState } from "../schema/GameState";
+import { createLogger } from "../../../logger";
+import { gameEnvironment } from "../../gameEnvironment";
+import { GameRoom } from "../../GameRoom";
+import { BodySchema } from "../../schema/GameState";
+import { Level } from "../Level";
+import { LevelController } from "../LevelController";
 const log = createLogger("sprintlogic");
 
 export type SprintMessage = boolean;
@@ -20,14 +21,16 @@ export class SprintActionRules extends Schema {
     gameEnvironment.sprintEnergyDrainPerMillisecond;
 }
 
-export class SprintAction implements GameController {
+export class SprintAction implements LevelController {
   config = new SprintActionRules();
 
-  attachToRoom(room: GameRoom, state: GameState) {
-    this.config = state.gameRules.sprintActionRules;
+  attachToLevel(level: Level) {
+    const room = level.room;
+    const state = room.state;
+    this.config = state.options.sprintActionRules;
     room.onMessage<SprintMessage>("sprint", (client, sprint) => {
       log("sprint message from %s", client.sessionId);
-      const { body } = state.findPlayerAndBody(client.sessionId);
+      const { body } = room.gameStateFacade.findPlayerAndBody(client.sessionId);
       if (body) {
         if (sprint) {
           body.wantsToSprint = true;
@@ -38,7 +41,7 @@ export class SprintAction implements GameController {
     });
   }
 
-  updateBody(_room: GameRoom, millis: number, body: BodySchema) {
+  updateBody(level: Level, millis: number, body: BodySchema) {
     // update body effects (e.g. player sprinting)
     body.speed = gameEnvironment.speedNormal;
     if (

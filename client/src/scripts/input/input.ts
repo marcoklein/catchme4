@@ -1,10 +1,11 @@
 import { Room } from "colyseus.js";
 import { GameState } from "../generated/GameState";
-import GameScene from "../scenes/GameScene";
+import LevelScene from "../scenes/LevelScene";
 import { createLogger } from "../logger";
 const log = createLogger("input");
 
-export function initInput(scene: GameScene, room: Room<GameState>) {
+// TODO rename to "game input" and bind to level scene
+export function initInput(scene: LevelScene, room: Room<GameState>) {
   const { up, down, left, right, space } =
     scene.input.keyboard.createCursorKeys();
 

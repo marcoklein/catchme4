@@ -1,8 +1,8 @@
-import { BodySchema, Player } from "./schema/GameState";
+import { Player } from "./schema/GameState";
 
 export type EVENTS = {
-  caught: { catcher?: BodySchema; caught: BodySchema };
-  newPlayer: { player: Player; body: BodySchema };
+  playerJoined: { player: Player };
+  playerDisconnected: { player: Player };
 };
 
 export class GameEvents {

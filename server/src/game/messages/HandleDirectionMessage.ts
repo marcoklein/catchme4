@@ -1,8 +1,7 @@
 import { log } from "debug";
-import { Vector, Body } from "matter-js";
-import { GameController } from "../GameController";
-import { GameRoom } from "../GameRoom";
-import { BodySchema, GameState } from "../schema/GameState";
+import { Vector } from "matter-js";
+import { Level } from "../level/Level";
+import { LevelController } from "../level/LevelController";
 
 export interface DirectionMessage {
   up: boolean;
@@ -11,11 +10,12 @@ export interface DirectionMessage {
   right: boolean;
 }
 
-export class HandleDirectionMessage implements GameController {
-  attachToRoom(room: GameRoom, state: GameState) {
+export class HandleDirectionMessage implements LevelController {
+  attachToLevel(level: Level) {
+    const room = level.room;
     room.onMessage<DirectionMessage>("direction", (client, message) => {
       log("direction message", message, "from", client.sessionId);
-      const { body } = state.findPlayerAndBody(client.sessionId);
+      const { body } = room.gameStateFacade.findPlayerAndBody(client.sessionId);
       if (body) {
         let moveX = 0;
         let moveY = 0;

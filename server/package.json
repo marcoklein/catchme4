@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@catchme4/server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "npm init template for bootstrapping an empty Colyseus project",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "build": "npm run clean && tsc && copyfiles package.json ./lib && copyfiles arena.env ./lib",
     "clean": "node node_modules/rimraf/bin lib",
     "test": "mocha --require ts-node/register src/**.spec.ts --exit --timeout 15000",
-    "codegen:schema": "schema-codegen ./src/rooms/schema/GameState.ts --output ../client/src/scripts/generated --ts"
+    "codegen:schema": "rimraf ../client/src/scripts/generated && schema-codegen ./src/game/schema/GameState.ts --output ../client/src/scripts/generated --ts"
   },
   "author": "",
   "license": "UNLICENSED",

@@ -1,7 +1,7 @@
 import { Bodies, Engine, World } from "matter-js";
-import { GameController } from "../GameController";
-import { GameRoom } from "../GameRoom";
-import { GameState, Texture, Tile, TileMap } from "../schema/GameState";
+import { Texture, Tile, TileMap } from "../../schema/GameState";
+import { Level } from "../Level";
+import { LevelController } from "../LevelController";
 
 const textures = {
   grass: () => new Texture("tilesheet.grass", 0),
@@ -59,9 +59,10 @@ export function createTileMap() {
   return tileMap;
 }
 
-export class CreateTileMap implements GameController {
-  attachToRoom(room: GameRoom, state: GameState) {
+export class CreateTileMap implements LevelController {
+  attachToLevel(level: Level) {
     const tileMap = createTileMap();
+    const state = level.state;
 
     state.tileMap = tileMap;
 
@@ -72,7 +73,7 @@ export class CreateTileMap implements GameController {
     state.tileMap.tiles.forEach((tile) => {
       if (tile.walkable) return;
       World.add(
-        room.engine.world,
+        level.engine.world,
         Bodies.rectangle(
           tileWorldX + tile.position.x * tileMap.tileSize,
           tileWorldY + tile.position.y * tileMap.tileSize,
@@ -85,7 +86,7 @@ export class CreateTileMap implements GameController {
       );
     });
     this.createWorldBoundaries(
-      room.engine,
+      level.engine,
       tileMap.mapSize.width * tileMap.tileSize,
       tileMap.mapSize.height * tileMap.tileSize
     );

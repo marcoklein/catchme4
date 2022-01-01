@@ -13,3 +13,9 @@ yarn install
 ```
 yarn start
 ```
+
+## New version
+
+```
+yarn lerna version minor
+```

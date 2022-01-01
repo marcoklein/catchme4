@@ -1,7 +1,7 @@
 import "phaser";
 import GameScene from "./scenes/GameScene";
 import LevelScene from "./scenes/LevelScene";
-import PreloadScene from "./scenes/PreloadScene";
+import PreloadScene from "./scenes/temppreloadScene";
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;

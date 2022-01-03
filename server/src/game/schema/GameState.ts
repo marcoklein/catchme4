@@ -72,7 +72,7 @@ export class BodySchema extends Schema {
   @type(Position) moveDirection: Position = new Position();
   @type("number") radius: number = 1;
   @type("boolean") isCatcher: boolean = false;
-  @type("number") remainingCatcherTimeMillis: number = 0;
+  @type("number") remainingCatcherTimeMillis: number = -1;
   @type(Texture) texture = new Texture("body.blue.1");
 
   @type("number") energy: number = 100;
@@ -99,9 +99,14 @@ export class GameStatisticsSchema extends Schema {
     new MapSchema<PlayerStatisticsSchema>();
 }
 
+export type GameLevelSchemaState =
+  | "warmup"
+  | "starting"
+  | "running"
+  | "finished";
+
 export class GameLevelSchema extends Schema {
-  @type("string") state: "warmup" | "starting" | "running" | "finished" =
-    "warmup";
+  @type("string") state: GameLevelSchemaState = "warmup";
   @type("number") startingCountdown = 10;
   @type("number") remainingGameTimeMillis = -1;
   @type("number") maxCatcherTimeMillis = 30000;

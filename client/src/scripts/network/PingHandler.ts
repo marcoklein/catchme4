@@ -3,7 +3,6 @@ import { environment } from "../environment";
 import { GameState } from "../generated/GameState";
 import { createLogger } from "../logger";
 import GameScene from "../scenes/GameScene";
-import LevelScene from "../scenes/LevelScene";
 const log = createLogger("ping");
 
 export class PingHandler {

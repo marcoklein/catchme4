@@ -1,16 +1,39 @@
 import { BodySchema } from "../generated/BodySchema";
-import { Texture } from "../generated/Texture";
 import { DEPTH } from "../globals";
 import { createLogger } from "../logger";
 import LevelScene from "../scenes/LevelScene";
+import { millisToMinutesAndSeconds } from "../shared/milllis-to-minutes-and-seconds";
 import { getTextureFrameKey } from "../shared/schema-utils";
 const log = createLogger("client:body-synchronizer");
+
+function updateRemainingCatcherTimeText(scene: LevelScene, millis: number) {
+  if (millis < 0) {
+    scene.hudScene.updateGameStatusText(undefined);
+  } else {
+    const { seconds, minutes } = millisToMinutesAndSeconds(millis);
+    scene.hudScene.updateGameStatusText(
+      `Catch somebody! ${Math.floor(minutes)}:${new String(
+        Math.floor(seconds)
+      ).padStart(2, "0")}`
+    );
+  }
+}
 
 export function bodySynchronizer(scene: LevelScene, body: BodySchema) {
   log("added new body with id", body.id);
 
   if (scene.network.ownPlayer?.bodyId === body.id) {
+    scene.hudScene.updateGameStatusText("Have fun!");
     log("Adding body of our player!");
+    const renderEnergy = () => {
+      scene.hudScene.updateEnergy(body.energy, body.maxEnergy);
+    };
+    body.listen("maxEnergy", renderEnergy);
+    body.listen("energy", renderEnergy);
+
+    body.listen("remainingCatcherTimeMillis", (time) => {
+      updateRemainingCatcherTimeText(scene, time);
+    });
   }
 
   // adding new player to scene
@@ -82,6 +105,8 @@ export function bodySynchronizer(scene: LevelScene, body: BodySchema) {
 
     if (scene.network.ownPlayer?.bodyId === body.id) {
       log("Removing body of our player!");
+      scene.hudScene.updateGameStatusText("Waiting for game to finish");
+      scene.hudScene.updateEnergy(undefined);
     }
   };
 

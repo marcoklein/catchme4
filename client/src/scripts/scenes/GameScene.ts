@@ -29,11 +29,6 @@ export default class GameScene extends Phaser.Scene {
     this.pingText.setOrigin(0, 1);
 
     room.state.listen("level", (value, prevValue) => {
-      console.log(
-        "state change for level: creating LevelScene",
-        value,
-        prevValue
-      );
       if (prevValue) {
         log("destroying old scene");
         try {

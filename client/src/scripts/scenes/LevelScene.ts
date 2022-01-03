@@ -29,6 +29,7 @@ export default class LevelScene extends Phaser.Scene {
     this.hudScene = this.scene.add("HudScene", HudScene, true) as HudScene;
     this.network = network;
     this.levelState = network.room.state.level;
+    this.hudScene.updateGameStatusText("Joining...");
 
     initInput(this, network.room);
     this.initializeLevelState(this, this.levelState);
@@ -39,12 +40,6 @@ export default class LevelScene extends Phaser.Scene {
       const playerBody = this.network.room.state.level.bodies.get(
         this.network.ownPlayer.bodyId
       );
-      if (playerBody) {
-        this.hudScene.updateEnergy(playerBody.energy, playerBody.maxEnergy);
-        this.hudScene.updateRemainingCatcherTimeText(
-          playerBody.remainingCatcherTimeMillis
-        );
-      }
     }
   }
 
@@ -74,6 +69,29 @@ export default class LevelScene extends Phaser.Scene {
 
     // TODO refactor create body synchronizer
     state.bodies.onAdd = (body) => bodySynchronizer(this, body);
+
+    this.levelState.listen("state", (state) => {
+      const stateLogic = {
+        warmup: () => {
+          this.hudScene.updateGameStatusText("Waiting for others to join...");
+        },
+        starting: () => {
+          this.hudScene.updateGameStatusText("Starting...");
+        },
+        running: () => {
+          this.hudScene.updateGameStatusText("Running");
+        },
+        finished: () => {
+          this.hudScene.updateGameStatusText("Finished");
+        },
+      };
+      const logic = stateLogic[state];
+      if (logic === undefined) {
+        console.warn(`unhandled level state: ${state}`);
+      } else {
+        logic();
+      }
+    });
 
     const tileGroup = scene.add.group();
     this.levelListeners.push(

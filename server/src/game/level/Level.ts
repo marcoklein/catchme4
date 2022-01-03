@@ -3,7 +3,12 @@ import { createLogger } from "../../logger";
 import { BodyFactory } from "../BodyFactory";
 import { GameRoom } from "../GameRoom";
 import { HandleDirectionMessage } from "../messages/HandleDirectionMessage";
-import { BodySchema, GameLevelSchema, Player } from "../schema/GameState";
+import {
+  BodySchema,
+  GameLevelSchema,
+  GameLevelSchemaState,
+  Player,
+} from "../schema/GameState";
 import { SprintAction } from "./actions/SprintAction";
 import { CreatePhysicsController } from "./controllers/CreatePhysics";
 import { CreateTileMap } from "./controllers/CreateTileMap";
@@ -16,7 +21,7 @@ import { InitialCatcherGameRule } from "./rules/InitialCatcherGameRule";
 import { TotalGameTimeRule } from "./rules/TotalGameTimeRule";
 const log = createLogger("level");
 
-export type FinishGameReason = "totalTime";
+export type FinishGameReason = "totalTime" | "playerWon";
 
 /**
  * Controls logic for a level.
@@ -28,6 +33,7 @@ export class Level {
   bodyFactory = new BodyFactory();
   room: GameRoom;
   controllers: LevelController[] = [];
+  gameRulesDuringRunningGame: LevelController[] = [];
   events = new LevelEvents();
   state!: GameLevelSchema;
   private bodiesToRemoveInNextUpdate: BodySchema[] = [];
@@ -46,6 +52,7 @@ export class Level {
 
     // start new level
     this.state = new GameLevelSchema();
+    this.state.state = "warmup";
     this.events = new LevelEvents();
     this.room.state.level = this.state;
     this.schemaToMatterBodyMap = new Map();
@@ -61,10 +68,12 @@ export class Level {
       new HandleDirectionMessage(),
 
       new InitialCatcherGameRule(),
-      new CatchTimerRule(),
-      // new TotalGameTimeRule(),
 
       new SprintAction(),
+    ];
+    this.gameRulesDuringRunningGame = [
+      new CatchTimerRule(),
+      // new TotalGameTimeRule(),
     ];
 
     this.engine = Engine.create({
@@ -79,6 +88,23 @@ export class Level {
       this.addPlayerBody(player);
     });
     log("Initialized level");
+  }
+
+  private changeLevelState(newState: GameLevelSchemaState) {
+    log("Changing level state from %s to %s", this.state.state, newState);
+    this.state.state = newState;
+    if (newState === "running") {
+      this.gameRulesDuringRunningGame.forEach((controller) => {
+        if (controller.attachToLevel) {
+          controller.attachToLevel(this, this.state);
+        }
+        this.controllers.push(controller);
+      });
+    }
+  }
+
+  startLevel() {
+    this.changeLevelState("running");
   }
 
   /**
@@ -109,6 +135,15 @@ export class Level {
     this.schemaToMatterBodyMap.set(body, matterBody);
     this.matterBodyToSchemaBodyMap.set(matterBody, body);
     this.events.emit("newPlayer", { player, body });
+
+    log(
+      "Added new player body to level. Now there are %d bodies",
+      this.state.bodies.size
+    );
+    if (this.state.bodies.size >= 2 && this.state.state === "warmup") {
+      log("Got more than 2 players. Starting the game.");
+      this.startLevel();
+    }
   }
 
   removePlayerBodyInNextUpdate(player: Player) {
@@ -160,6 +195,11 @@ export class Level {
         World.remove(this.engine.world, matterBody);
         this.schemaToMatterBodyMap.delete(body);
         this.matterBodyToSchemaBodyMap.delete(matterBody);
+      }
+
+      // TODO refactor this into state logic
+      if (this.state.bodies.size <= 1 && this.state.state === "running") {
+        this.finishLevel("playerWon");
       }
     });
     this.bodiesToRemoveInNextUpdate = [];

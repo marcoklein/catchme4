@@ -13,6 +13,7 @@ export class BodyFactory {
     body.texture = new Texture("body.blue.1");
     body.maxEnergy = gameEnvironment.normalEnergy;
     body.speed = gameEnvironment.speedNormal;
+    body.remainingCatcherTimeMillis = -1;
     body.isSprinting = false;
     return body;
   }

@@ -1,8 +1,6 @@
-import { LevelController } from "../LevelController";
 import { gameEnvironment } from "../../gameEnvironment";
-import { GameRoom } from "../../GameRoom";
-import { GameState } from "../../schema/GameState";
 import { Level } from "../Level";
+import { LevelController } from "../LevelController";
 
 export class InitialCatcherGameRule implements LevelController {
   attachToLevel(level: Level) {

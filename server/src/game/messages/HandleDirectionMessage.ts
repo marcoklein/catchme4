@@ -1,7 +1,8 @@
-import { log } from "debug";
 import { Vector } from "matter-js";
+import { createLogger } from "../../logger";
 import { Level } from "../level/Level";
 import { LevelController } from "../level/LevelController";
+const log = createLogger("handledirectionmessage");
 
 export interface DirectionMessage {
   up: boolean;
@@ -15,7 +16,9 @@ export class HandleDirectionMessage implements LevelController {
     const room = level.room;
     room.onMessage<DirectionMessage>("direction", (client, message) => {
       log("direction message", message, "from", client.sessionId);
-      const { body } = room.gameStateFacade.findPlayerAndBody(client.sessionId);
+      const { body } = room.gameStateFacade!.findPlayerAndBody(
+        client.sessionId
+      );
       if (body) {
         let moveX = 0;
         let moveY = 0;

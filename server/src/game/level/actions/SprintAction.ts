@@ -1,7 +1,6 @@
 import { Schema, type } from "@colyseus/schema";
 import { createLogger } from "../../../logger";
 import { gameEnvironment } from "../../gameEnvironment";
-import { GameRoom } from "../../GameRoom";
 import { BodySchema } from "../../schema/GameState";
 import { Level } from "../Level";
 import { LevelController } from "../LevelController";
@@ -30,7 +29,9 @@ export class SprintAction implements LevelController {
     this.config = state.options.sprintActionRules;
     room.onMessage<SprintMessage>("sprint", (client, sprint) => {
       log("sprint message from %s", client.sessionId);
-      const { body } = room.gameStateFacade.findPlayerAndBody(client.sessionId);
+      const { body } = room.gameStateFacade!.findPlayerAndBody(
+        client.sessionId
+      );
       if (body) {
         if (sprint) {
           body.wantsToSprint = true;

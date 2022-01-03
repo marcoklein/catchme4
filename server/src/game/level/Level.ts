@@ -163,8 +163,9 @@ export class Level {
     // TODO finish this game session
     log('finishing game with reason "%s"', reason);
     this.room.state.level.state = "finished";
-    // TODO change level after time...
-    this.changeLevel();
+    setTimeout(() => {
+      this.changeLevel();
+    }, 3000);
   }
 
   update(millis: number) {

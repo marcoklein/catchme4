@@ -6,8 +6,8 @@ import { LevelController } from "../LevelController";
 const log = createLogger("catchtimer");
 
 export class CatchTimerOptions extends Schema {
-  @type("number") initialCatcherTimeMillis: number = 60000;
-  @type("number") timeAfterCatchFactor: number = 0.8;
+  @type("number") initialCatcherTimeMillis: number = 100 * 1000;
+  @type("number") timeAfterCatchFactor: number = 0.95;
 }
 
 export class CatchTimerRule implements LevelController {
@@ -17,6 +17,10 @@ export class CatchTimerRule implements LevelController {
   attachToLevel(level: Level) {
     this.config = level.room.state.options.catchTimerRules;
     this.currentMaxCatcherTime = this.config.initialCatcherTimeMillis;
+    level.state.bodies.forEach((body) => {
+      if (body.isCatcher)
+        body.remainingCatcherTimeMillis = this.getMaxCatcherTime();
+    });
     level.events.on("caught", ({ catcher, caught }) => {
       if (caught) caught.remainingCatcherTimeMillis = this.getMaxCatcherTime();
       if (catcher) catcher.remainingCatcherTimeMillis = -1;

@@ -16,6 +16,7 @@
 - `CatcherTimeRule`: remove player body if it has been catcher for a long time
 - particle explosion effect if scene removes player body
 - level recreates and changes if only one player is alive
+- change level with delay
 
 ## 0.3.0
 

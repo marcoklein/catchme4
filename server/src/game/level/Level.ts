@@ -30,13 +30,11 @@ export class Level {
   controllers: LevelController[] = [];
   events = new LevelEvents();
   state!: GameLevelSchema;
+  private bodiesToRemoveInNextUpdate: BodySchema[] = [];
 
   constructor(room: GameRoom) {
     this.room = room;
     this.changeLevel();
-    this.room.gameEvents.on("playerJoined", ({ player }) =>
-      this.addPlayerBody(player)
-    );
   }
 
   private changeLevel() {
@@ -53,6 +51,7 @@ export class Level {
     this.schemaToMatterBodyMap = new Map();
     this.matterBodyToSchemaBodyMap = new Map();
     this.bodyFactory = new BodyFactory();
+    this.bodiesToRemoveInNextUpdate = [];
     this.controllers = [
       new CreatePhysicsController(),
       new CreateTileMap(),
@@ -63,7 +62,7 @@ export class Level {
 
       new InitialCatcherGameRule(),
       new CatchTimerRule(),
-      new TotalGameTimeRule(),
+      // new TotalGameTimeRule(),
 
       new SprintAction(),
     ];
@@ -112,18 +111,16 @@ export class Level {
     this.events.emit("newPlayer", { player, body });
   }
 
-  removePlayerBody(player: Player) {
+  removePlayerBodyInNextUpdate(player: Player) {
     const body = this.state.bodies.get(player.bodyId);
+    if (body) this.removeBodyInNextUpdate(body);
+    player.bodyId = "";
+  }
+
+  removeBodyInNextUpdate(body: BodySchema) {
+    // remove a body from game
     if (body) {
-      log("destroying body with id %s", body?.id);
-      this.state.bodies.delete(body.id);
-      const matterBody = this.schemaToMatterBodyMap.get(body);
-      if (matterBody) {
-        World.remove(this.engine.world, matterBody);
-        this.schemaToMatterBodyMap.delete(body);
-        this.matterBodyToSchemaBodyMap.delete(matterBody);
-      }
-      player.bodyId = "";
+      this.bodiesToRemoveInNextUpdate.push(body);
     }
   }
 
@@ -136,6 +133,7 @@ export class Level {
   }
 
   update(millis: number) {
+    this.updateRemovedBodies();
     // apply body effects
     this.room.state.level.bodies.forEach((body) =>
       this.controllers.forEach((controller) =>
@@ -147,7 +145,23 @@ export class Level {
     this.controllers.forEach((controller) =>
       controller.update?.call(controller, this, millis)
     );
+    this.updateRemovedBodies();
+
     // run physics simulation
     Engine.update(this.engine, millis);
+  }
+
+  private updateRemovedBodies() {
+    this.bodiesToRemoveInNextUpdate.forEach((body) => {
+      log("destroying body with id %s", body?.id);
+      this.state.bodies.delete(body.id);
+      const matterBody = this.schemaToMatterBodyMap.get(body);
+      if (matterBody) {
+        World.remove(this.engine.world, matterBody);
+        this.schemaToMatterBodyMap.delete(body);
+        this.matterBodyToSchemaBodyMap.delete(matterBody);
+      }
+    });
+    this.bodiesToRemoveInNextUpdate = [];
   }
 }

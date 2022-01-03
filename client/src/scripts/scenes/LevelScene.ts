@@ -5,14 +5,17 @@ import { initInput } from "../input/input";
 import { createLogger } from "../logger";
 import { bodySynchronizer } from "../network/bodySynchronizer";
 import { Network } from "../network/Network";
+import { ParticleManager } from "../objects/ParticleManager";
+import { getTextureFrameKey } from "../shared/schema-utils";
 import HudScene from "./HudScene";
 const log = createLogger("levelscene");
 
 export default class LevelScene extends Phaser.Scene {
   hudScene: HudScene;
-  private network: Network;
+  network: Network;
   levelState: GameLevelSchema;
   levelListeners: any[] = [];
+  particles = new ParticleManager(this);
 
   constructor() {
     super({ key: "LevelScene" });
@@ -36,8 +39,12 @@ export default class LevelScene extends Phaser.Scene {
       const playerBody = this.network.room.state.level.bodies.get(
         this.network.ownPlayer.bodyId
       );
-      if (playerBody)
+      if (playerBody) {
         this.hudScene.updateEnergy(playerBody.energy, playerBody.maxEnergy);
+        this.hudScene.updateRemainingCatcherTimeText(
+          playerBody.remainingCatcherTimeMillis
+        );
+      }
     }
   }
 
@@ -91,7 +98,7 @@ export default class LevelScene extends Phaser.Scene {
                     tileWorldX + tile.position.x * tileMap.tileSize,
                     tileWorldY + tile.position.y * tileMap.tileSize,
                     tile.texture.key,
-                    tile.texture.frameKey || tile.texture.frameIndex
+                    getTextureFrameKey(tile.texture)
                   );
                   tileImage.setDisplaySize(tileMap.tileSize, tileMap.tileSize);
                   tileImage.setDepth(tile.layer || DEPTH.tile);
@@ -115,9 +122,7 @@ export default class LevelScene extends Phaser.Scene {
     );
     this.levelListeners.push(
       state.listen("remainingGameTimeMillis", (remainingGameTimeMillis) => {
-        const seconds = remainingGameTimeMillis / 1000;
-        const minutes = Math.floor(seconds / 60);
-        this.hudScene.updateTotalTimeText(minutes, Math.floor(seconds % 60));
+        this.hudScene.updateRemainingTimeText(remainingGameTimeMillis);
       })
     );
     state.triggerAll();
@@ -128,5 +133,6 @@ export default class LevelScene extends Phaser.Scene {
     this.levelListeners.forEach((listener) => listener());
     this.levelListeners = [];
     this.scene.remove("HudScene");
+    this.particles.destroyParticles();
   }
 }

@@ -1,28 +1,43 @@
 import { Schema, type } from "@colyseus/schema";
 import { createLogger } from "../../../logger";
-import { LevelController } from "../LevelController";
-import { GameRoom } from "../../GameRoom";
-import { BodySchema, GameState } from "../../schema/GameState";
+import { BodySchema } from "../../schema/GameState";
 import { Level } from "../Level";
+import { LevelController } from "../LevelController";
 const log = createLogger("catchtimer");
 
-export class CatchTimerRules extends Schema {
-  @type("number") maxContinuousCatcherTimeMillis: number = 20000;
+export class CatchTimerOptions extends Schema {
+  @type("number") initialCatcherTimeMillis: number = 60000;
+  @type("number") timeAfterCatchFactor: number = 0.8;
 }
 
 export class CatchTimerRule implements LevelController {
-  config = new CatchTimerRules();
+  config = new CatchTimerOptions();
+  currentMaxCatcherTime = -1;
 
   attachToLevel(level: Level) {
-    level.events.on("caught", ({ catcher }) => {
-      if (catcher) catcher.currentCatcherTimeMillis = 0;
+    this.config = level.room.state.options.catchTimerRules;
+    this.currentMaxCatcherTime = this.config.initialCatcherTimeMillis;
+    level.events.on("caught", ({ catcher, caught }) => {
+      if (caught) caught.remainingCatcherTimeMillis = this.getMaxCatcherTime();
+      if (catcher) catcher.remainingCatcherTimeMillis = -1;
     });
+  }
+
+  private getMaxCatcherTime() {
+    const curMax = this.currentMaxCatcherTime;
+    this.currentMaxCatcherTime *= this.config.timeAfterCatchFactor;
+    return curMax;
   }
 
   updateBody(level: Level, millis: number, body: BodySchema) {
     if (body.isCatcher) {
-      body.totalCatcherTimeMillis += millis;
-      body.currentCatcherTimeMillis += millis;
+      body.remainingCatcherTimeMillis = Math.max(
+        0,
+        body.remainingCatcherTimeMillis - millis
+      );
+      if (body.remainingCatcherTimeMillis === 0) {
+        level.removeBodyInNextUpdate(body);
+      }
     }
   }
 }

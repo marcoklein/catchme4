@@ -1,5 +1,6 @@
-import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
+import { MapSchema, Schema, type } from "@colyseus/schema";
 import { SprintActionRules } from "../level/actions/SprintAction";
+import { CatchTimerOptions } from "../level/rules/CatchTimerRule";
 
 export class PlayerStatisticsSchema extends Schema {}
 
@@ -27,8 +28,8 @@ export class Dimension extends Schema {
 
 export class Texture extends Schema {
   @type("string") key: string;
-  @type("string") frameKey?: string;
-  @type("int8") frameIndex?: number;
+  @type("string") frameKey = "";
+  @type("int8") frameIndex = -1;
 
   constructor(key: string, frame?: string | number) {
     super();
@@ -71,8 +72,8 @@ export class BodySchema extends Schema {
   @type(Position) moveDirection: Position = new Position();
   @type("number") radius: number = 1;
   @type("boolean") isCatcher: boolean = false;
-  @type("number") totalCatcherTimeMillis: number = 0;
-  @type("number") currentCatcherTimeMillis: number = 0;
+  @type("number") remainingCatcherTimeMillis: number = 0;
+  @type(Texture) texture = new Texture("body.blue.1");
 
   @type("number") energy: number = 100;
   @type("number") maxEnergy: number = 100;
@@ -89,6 +90,7 @@ export class BodySchema extends Schema {
 export class GameOptions extends Schema {
   @type(SprintActionRules) sprintActionRules = new SprintActionRules();
   @type("number") totalGameTimeMillis = 5 * 1000 * 60;
+  @type(CatchTimerOptions) catchTimerRules = new CatchTimerOptions();
 }
 
 export class GameStatisticsSchema extends Schema {
@@ -102,6 +104,7 @@ export class GameLevelSchema extends Schema {
     "warmup";
   @type("number") startingCountdown = 10;
   @type("number") remainingGameTimeMillis = -1;
+  @type("number") maxCatcherTimeMillis = 30000;
 
   @type({ map: BodySchema }) bodies = new MapSchema<BodySchema>();
   @type(TileMap) tileMap = new TileMap();

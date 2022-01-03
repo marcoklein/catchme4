@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-- finish game if one player has been the catcher for more than 20 seconds
 - create a lobby scene
 
 - create obstacles you can only pass with a boost
@@ -11,6 +10,11 @@
 - move also with wasd - let client configure inputs
 - destroy obstacles by walking against them
 - create tiles that accelerate a body
+
+## 0.4.0
+
+- `CatcherTimeRule`: remove player body if it has been catcher for a long time
+- particle explosion effect if scene removes player body
 
 ## 0.3.0
 

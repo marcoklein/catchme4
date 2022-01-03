@@ -1,7 +1,6 @@
 import { Client, Room } from "colyseus";
 import { environment } from "../environment";
 import { createLogger } from "../logger";
-import { GameEvents } from "./GameEvents";
 import { HandlePingMessage } from "./HandlePingMessage";
 import { Level } from "./level/Level";
 import { GameState, Player } from "./schema/GameState";
@@ -9,7 +8,6 @@ import { GameStateFacade } from "./schema/GameStateFacade";
 const log = createLogger("gameroom");
 
 export class GameRoom extends Room<GameState> {
-  gameEvents = new GameEvents();
   gameStateFacade?: GameStateFacade;
   level?: Level;
 
@@ -24,7 +22,6 @@ export class GameRoom extends Room<GameState> {
     this.setState(new GameState());
     console.log("created game with state", this.state);
     this.gameStateFacade = new GameStateFacade(this.state);
-    this.gameEvents = new GameEvents();
     this.level = new Level(this);
 
     new HandlePingMessage().attachToRoom(this);
@@ -44,7 +41,7 @@ export class GameRoom extends Room<GameState> {
     log(sessionId, "joined!");
     const player = new Player(sessionId, name);
     this.state.players.set(player.id, player);
-    this.gameEvents.emit("playerJoined", { player });
+    this.level?.addPlayerBody(player);
   }
 
   onJoin(client: Client, options: any) {
@@ -56,7 +53,7 @@ export class GameRoom extends Room<GameState> {
   onLeave(client: Client, consented: boolean) {
     const player = this.state.players.get(client.sessionId);
     if (player) {
-      this.gameEvents.emit("playerDisconnected", { player });
+      this.level?.removePlayerBodyInNextUpdate(player);
       this.state.players.delete(client.sessionId);
     }
   }

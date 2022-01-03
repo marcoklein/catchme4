@@ -2,14 +2,18 @@
 
 ## Unreleased
 
-- create a lobby scene
-
 - create obstacles you can only pass with a boost
 - create monsters that move in certain patterns
 - create bigger trees you can hide under
 - move also with wasd - let client configure inputs
 - destroy obstacles by walking against them
 - create tiles that accelerate a body
+
+## 0.5.0 Prototype
+
+- [ ] create a lobby scene
+- [ ] show remaining catcher time on all clients
+- [ ] show movement keys to users
 
 ## 0.4.0
 

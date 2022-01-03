@@ -13,7 +13,7 @@
     "build": "lerna run build --parallel",
     "deploy": "yarn build && lerna run deploy --scope @catchme4/client",
     "schema": "lerna run codegen:schema --scope @catchme4/server",
-    "version": "lerna version minor"
+    "version:minor": "lerna version minor"
   },
   "devDependencies": {
     "lerna": "^4.0.0"

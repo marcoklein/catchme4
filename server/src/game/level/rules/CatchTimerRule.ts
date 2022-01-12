@@ -6,8 +6,8 @@ import { LevelController } from "../LevelController";
 const log = createLogger("catchtimer");
 
 export class CatchTimerOptions extends Schema {
-  @type("number") initialCatcherTimeMillis: number = 100 * 1000;
-  @type("number") timeAfterCatchFactor: number = 0.95;
+  @type("number") initialCatcherTimeMillis: number = 60 * 1000;
+  @type("number") timeAfterCatchFactor: number = 0.8;
 }
 
 export class CatchTimerRule implements LevelController {
